@@ -2,7 +2,6 @@ package nextflow.dataflow.data
 
 import groovy.util.logging.Slf4j
 import nextflow.processor.TaskRun
-import nextflow.util.MemoryUnit
 
 import java.nio.file.Path
 
