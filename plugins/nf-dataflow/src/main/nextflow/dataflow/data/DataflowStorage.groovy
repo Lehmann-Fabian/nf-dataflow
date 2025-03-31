@@ -36,7 +36,8 @@ class DataflowStorage {
                 TaskRun dependentTask
                 do {
                     dependentTask = this.outputs.get( currentPath )
-                } while( task == null && (currentPath = path.parent) != null )
+                    currentPath = currentPath.parent
+                } while( dependentTask == null && currentPath != null )
                 long size = calculateSize( path )
                 if ( dependentTask != null ) {
                     if ( !dependencies.containsKey( dependentTask) ) {
