@@ -92,16 +92,20 @@ class DataflowDag extends DAG {
 
     void addOutputsToVertex(TaskRun taskRun, Collection<Path> paths) {
         String text
+        int outputFiles
+        long outputSize
         if ( !paths ) {
             text = "No output files"
+            outputFiles = 0
+            outputSize = 0
         } else {
-            long outputSize = DataflowStorage.calculateSize( paths )
+            outputSize = DataflowStorage.calculateSize( paths )
             String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
-            long outputFiles = paths.size()
+            outputFiles = paths.size()
             String outputFilesText = outputFiles > 1 ? 'files' : 'file'
             text = "$outputFiles output $outputFilesText ($sizeString)"
         }
-        vertices.get( taskRun ).setOutputText( text )
+        vertices.get( taskRun ).setOutputData( text, outputFiles, outputSize )
 
     }
 
@@ -112,6 +116,8 @@ class DataflowDag extends DAG {
         private String outputText = null
         private final InputsList inputs = new InputsList()
         private final OutputsList outputs = new OutputsList()
+        private int outputFiles = 0
+        private long outputSize = 0
 
         DataflowVertex( String name, String inputText ) {
             this.name = name
@@ -137,12 +143,22 @@ class DataflowDag extends DAG {
             return outputs
         }
 
+        int getOutputFiles() {
+            return outputFiles
+        }
+
+        long getOutputSize() {
+            return outputSize
+        }
+
         void addOutput( DataflowWriteChannelHelper output ) {
             outputs.add( new OutParamHelper( output ) )
         }
 
-        void setOutputText( String text ) {
+        void setOutputData( String text, int outputFiles, long outputSize ) {
             outputText = text
+            this.outputFiles = outputFiles
+            this.outputSize = outputSize
         }
 
         String getSyntheticName() {
