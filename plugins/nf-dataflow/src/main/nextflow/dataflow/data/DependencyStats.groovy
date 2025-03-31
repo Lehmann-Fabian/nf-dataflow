@@ -14,10 +14,21 @@ class DependencyStats {
     }
 
     DataflowWriteChannelHelper toChannel() {
-        return new DataflowWriteChannelHelper("File: $files, Size: ${new MemoryUnit(size)}"  )
+        String fileText = files > 1 ? 'files' : 'file'
+        String size = new MemoryUnit(size).toString().replace(" ", "")
+        String text = "$files $fileText ($size)"
+        return new DataflowWriteChannelHelper(text)
     }
 
     boolean hasData() {
+        return files
+    }
+
+    long getSize() {
+        return size
+    }
+
+    int getFiles() {
         return files
     }
 

@@ -37,16 +37,25 @@ class DataflowDag extends DAG {
         return value.name
     }
 
-    String quoteName( String name ) {
+    private String quoteName( String name ) {
         if ( quoteName ) {
             return "\"${name}\""
         }
         return name
     }
 
+    private static String createInputString(long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
+        String inputSizeText = MemoryUnit.of(inputSize).toString().replace(" ", "")
+        long dependencySize = dependencies ? dependencies.values().sum { it.size } as long : 0L
+        long inputFiles = dependencySize + extern.files
+        String inputFilesText = inputFiles > 1 ? 'files' : 'file'
+        return "$inputFiles input $inputFilesText ($inputSizeText)"
+    }
+
     void addVertex( TaskRun task, long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
-        String name = quoteName("${task.name} (${MemoryUnit.of(inputSize).toString()})")
-        DataflowVertex vertice = new DataflowVertex( name )
+        String name = task.name
+        String inputText = createInputString( inputSize, dependencies, extern )
+        DataflowVertex vertice = new DataflowVertex( name, inputText )
 
         for (final Map.Entry<TaskRun, DependencyStats> entry in dependencies.entrySet()) {
             DataflowWriteChannelHelper channel = entry.value.toChannel()
@@ -70,18 +79,20 @@ class DataflowDag extends DAG {
     void generate() {
         for (final Map.Entry<TaskRun, DataflowVertex> entry in vertices.entrySet()) {
             DataflowVertex vertice = entry.value
-            addProcessNode( vertice.name, vertice.getInputs(), vertice.getOutputs() )
+            addProcessNode( quoteName(vertice.getSyntheticName()), vertice.getInputs(), vertice.getOutputs() )
         }
     }
 
     private static class DataflowVertex {
 
         private final String name
+        private final String inputText
         private final InputsList inputs = new InputsList()
         private final OutputsList outputs = new OutputsList()
 
-        DataflowVertex( String name ) {
+        DataflowVertex( String name, String inputText ) {
             this.name = name
+            this.inputText = inputText
         }
 
         void addInput( DataflowWriteChannelHelper input ) {
@@ -105,6 +116,10 @@ class DataflowDag extends DAG {
 
         void addOutput( DataflowWriteChannelHelper output ) {
             outputs.add( new OutParamHelper( output ) )
+        }
+
+        String getSyntheticName() {
+            return "$name<br>$inputText"
         }
 
     }
