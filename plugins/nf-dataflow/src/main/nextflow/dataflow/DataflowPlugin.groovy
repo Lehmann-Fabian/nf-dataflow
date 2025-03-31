@@ -1,3 +1,4 @@
+package nextflow.dataflow
 /*
  * Copyright 2021, Seqera Labs
  *
@@ -14,23 +15,14 @@
  * limitations under the License.
  */
 
-package nextflow.hello
+import groovy.transform.CompileStatic
+import nextflow.plugin.BasePlugin
+import org.pf4j.PluginWrapper
 
-import nextflow.Session
-import spock.lang.Specification
+@CompileStatic
+class DataflowPlugin extends BasePlugin {
 
-/**
- *
- * @author Paolo Di Tommaso <paolo.ditommaso@gmail.com>
- */
-class HelloFactoryTest extends Specification {
-
-    def 'should return observer' () {
-        when:
-        def result = new HelloFactory().create(Mock(Session))
-        then:
-        result.size()==1
-        result[0] instanceof HelloObserver
+    DataflowPlugin(PluginWrapper wrapper) {
+        super(wrapper)
     }
-
 }

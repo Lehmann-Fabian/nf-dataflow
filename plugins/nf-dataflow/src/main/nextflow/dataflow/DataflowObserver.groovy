@@ -1,3 +1,4 @@
+package nextflow.dataflow
 /*
  * Copyright 2021, Seqera Labs
  *
@@ -14,8 +15,6 @@
  * limitations under the License.
  */
 
-package nextflow.hello
-
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.Session
@@ -28,15 +27,6 @@ import nextflow.trace.TraceObserver
  */
 @Slf4j
 @CompileStatic
-class HelloObserver implements TraceObserver {
+class DataflowObserver implements TraceObserver {
 
-    @Override
-    void onFlowCreate(Session session) {
-        log.info "Pipeline is starting! 🚀"
-    }
-
-    @Override
-    void onFlowComplete() {
-        log.info "Pipeline complete! 👋"
-    }
 }

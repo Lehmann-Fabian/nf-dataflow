@@ -1,3 +1,4 @@
+package nextflow.dataflow
 /*
  * Copyright 2021, Seqera Labs
  *
@@ -14,8 +15,6 @@
  * limitations under the License.
  */
 
-package nextflow.hello
-
 import groovy.transform.CompileStatic
 import nextflow.Session
 import nextflow.trace.TraceObserver
@@ -26,12 +25,12 @@ import nextflow.trace.TraceObserverFactory
  * @author Paolo Di Tommaso <paolo.ditommaso@gmail.com>
  */
 @CompileStatic
-class HelloFactory implements TraceObserverFactory {
+class DataflowFactory implements TraceObserverFactory {
 
     @Override
     Collection<TraceObserver> create(Session session) {
         final result = new ArrayList()
-        result.add( new HelloObserver() )
+        result.add( new DataflowObserver() )
         return result
     }
 }
