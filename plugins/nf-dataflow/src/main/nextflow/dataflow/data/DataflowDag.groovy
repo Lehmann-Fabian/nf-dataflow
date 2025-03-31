@@ -76,6 +76,8 @@ class DataflowDag extends DAG {
         if ( extern.hasData() ) {
             DataflowWriteChannelHelper channel = extern.toChannel()
             vertice.addInput( channel )
+        } else if ( dependencies.isEmpty() ) {
+            vertice.addInput( new DataflowWriteChannelHelper("No input files") )
         }
 
         this.vertices.put( task, vertice )
