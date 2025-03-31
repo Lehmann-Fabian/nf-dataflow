@@ -14,6 +14,8 @@ import nextflow.script.params.InputsList
 import nextflow.script.params.OutputsList
 import nextflow.util.MemoryUnit
 
+import java.nio.file.Path
+
 @Slf4j
 class DataflowDag extends DAG {
 
@@ -45,6 +47,9 @@ class DataflowDag extends DAG {
     }
 
     private static String createInputString(long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
+        if ( !dependencies && !extern.hasData() ) {
+            return "No input files"
+        }
         String inputSizeText = MemoryUnit.of(inputSize).toString().replace(" ", "")
         long dependencySize = dependencies ? dependencies.values().sum { it.size } as long : 0L
         long inputFiles = dependencySize + extern.files
@@ -83,10 +88,26 @@ class DataflowDag extends DAG {
         }
     }
 
+    void addOutputsToVertex(TaskRun taskRun, Collection<Path> paths) {
+        String text
+        if ( !paths ) {
+            text = "No output files"
+        } else {
+            long outputSize = DataflowStorage.calculateSize( paths )
+            String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
+            long outputFiles = paths.size()
+            String outputFilesText = outputFiles > 1 ? 'files' : 'file'
+            text = "$outputFiles output $outputFilesText ($sizeString)"
+        }
+        vertices.get( taskRun ).setOutputText( text )
+
+    }
+
     private static class DataflowVertex {
 
         private final String name
         private final String inputText
+        private String outputText = null
         private final InputsList inputs = new InputsList()
         private final OutputsList outputs = new OutputsList()
 
@@ -118,8 +139,12 @@ class DataflowDag extends DAG {
             outputs.add( new OutParamHelper( output ) )
         }
 
+        void setOutputText( String text ) {
+            outputText = text
+        }
+
         String getSyntheticName() {
-            return "$name<br>$inputText"
+            return "<b>$name</b><br>$inputText" + (outputText ? "<br>$outputText" : "")
         }
 
     }

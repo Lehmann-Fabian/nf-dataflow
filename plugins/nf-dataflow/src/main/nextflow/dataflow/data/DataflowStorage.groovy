@@ -54,23 +54,22 @@ class DataflowStorage {
     }
 
     void addOutputs(TaskRun task, Collection<Path> outputs ) {
-        long outputSize = calculateSize( outputs )
-        MemoryUnit size = MemoryUnit.of( outputSize )
         synchronized (this.outputs) {
             for (final Path path in outputs) {
                 this.outputs.put( path, task )
             }
         }
+        dag?.addOutputsToVertex( task, outputs )
     }
 
-    private static long calculateSize( Collection<Path> files ) {
+    static long calculateSize( Collection<Path> files ) {
         return files
                 .parallelStream()
                 .mapToLong(DataflowStorage::calculateSize)
                 .sum()
     }
 
-    private static long calculateSize( Path path ) {
+    static long calculateSize( Path path ) {
         File file = path.toFile()
         return file.directory ? file.directorySize() : file.length()
     }
