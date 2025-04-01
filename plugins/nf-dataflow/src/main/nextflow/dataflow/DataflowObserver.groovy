@@ -47,6 +47,8 @@ class DataflowObserver implements TraceObserver {
     private final Path dagFile
     private final String dagName
     private final String dagFormat
+    private final Path inputFile
+    private final Path outputFile
     private final DataflowStorage storage
 
     DataflowObserver(Session session) {
@@ -69,11 +71,18 @@ class DataflowObserver implements TraceObserver {
             dagName = null
             dagFormat = null
         }
-        storage = new DataflowStorage( dag )
+        inputFile = initializeDataCSV( session, 'Input' )
+        outputFile = initializeDataCSV( session, 'Output' )
+        String delimiter = session.config.navigate('dataflow.delimiter') as String ?: ';'
+        storage = new DataflowStorage(
+                dag,
+                inputFile ? new DataWriter(inputFile, delimiter) : null,
+                outputFile ? new DataWriter(outputFile, delimiter) : null
+        )
     }
 
     private static Path initializeDataCSV(Session session, String name ) {
-        Path file = session.config.navigate('dataflow.input') as Path
+        Path file = session.config.navigate("dataflow.${name.toLowerCase()}") as Path
         if ( file != null ) {
             if ( file.getExtension().toLowerCase() != 'csv' )
                 throw new AbortOperationException("$name file must be a CSV file: ${file.toUriString()}")
@@ -99,6 +108,7 @@ class DataflowObserver implements TraceObserver {
             log.info "Dataflow DAG: ${dagName} (${dagFormat}), ${dag.edges}"
             createRender().renderDocument(dag,dagFile)
         }
+        storage.close()
     }
 
     @PackageScope

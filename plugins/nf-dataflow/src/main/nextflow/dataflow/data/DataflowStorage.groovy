@@ -9,10 +9,14 @@ import java.nio.file.Path
 class DataflowStorage {
 
     private final DataflowDag dag
+    private final DataWriter inputFile
+    private final DataWriter outputFile
     private final Map<Path, TaskRun> outputs = new HashMap<>()
 
-    DataflowStorage( DataflowDag dag ) {
+    DataflowStorage( DataflowDag dag, DataWriter inputFile, DataWriter outputFile ) {
         this.dag = dag
+        this.inputFile = inputFile
+        this.outputFile = outputFile
     }
 
 
@@ -20,6 +24,7 @@ class DataflowStorage {
         if ( dag ) {
             inputsToDag( task, inputs )
         }
+        inputFile?.addTask( task.name, task.hash.toString(), inputs )
     }
 
     private void inputsToDag( TaskRun task, Collection<Path> inputs ) {
@@ -60,6 +65,12 @@ class DataflowStorage {
             }
         }
         dag?.addOutputsToVertex( task, outputs )
+        outputFile?.addTask( task.name, task.hash.toString(), outputs )
+    }
+
+    void close() {
+        inputFile?.close()
+        outputFile?.close()
     }
 
     static long calculateSize( Collection<Path> files ) {
