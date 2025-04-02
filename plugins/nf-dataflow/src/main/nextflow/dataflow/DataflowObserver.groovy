@@ -107,8 +107,6 @@ class DataflowObserver implements TraceObserver {
         if ( dag ) {
             dag.generate()
             dag.normalize()
-            log.info "Dataflow DAG: ${dagName} (${dagFormat}), ${dag.vertices}"
-            log.info "Dataflow DAG: ${dagName} (${dagFormat}), ${dag.edges}"
             createRender().renderDocument(dag,dagFile)
         }
         storage.close()
