@@ -96,7 +96,7 @@ class DataflowStorage {
 
     private void createSummary() {
         try (PrintWriter writer = new PrintWriter(summaryFile.toFile())){
-            writer.println("Task${delimiter}hash${delimiter}inputs${delimiter}inputSize${delimiter}outputs${delimiter}outputSize${delimiter}usedBy")
+            writer.println("task${delimiter}hash${delimiter}inputs${delimiter}inputSize${delimiter}outputs${delimiter}outputSize${delimiter}usedBy")
             taskStats.values().stream()
                     .sorted { a, b -> a.task.id <=> b.task.id }
                     .forEach { task ->
