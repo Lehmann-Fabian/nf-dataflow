@@ -51,7 +51,7 @@ class DataflowDag extends DAG {
             return "No input files"
         }
         String inputSizeText = MemoryUnit.of(inputSize).toString().replace(" ", "")
-        long dependencySize = dependencies ? dependencies.values().sum { it.size } as long : 0L
+        long dependencySize = dependencies ? dependencies.values().sum { it.files } as long : 0L
         long inputFiles = dependencySize + extern.files
         String inputFilesText = inputFiles > 1 ? 'files' : 'file'
         return "$inputFiles input $inputFilesText ($inputSizeText)"
