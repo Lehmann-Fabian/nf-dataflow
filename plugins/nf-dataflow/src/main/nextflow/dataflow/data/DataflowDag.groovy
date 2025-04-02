@@ -122,7 +122,7 @@ class DataflowDag extends DAG {
         }
 
         void addInput( DataflowWriteChannelHelper input ) {
-            def param = new InParamHelper( input);
+            def param = new InParamHelper( input)
             inputs.add( param )
         }
 
