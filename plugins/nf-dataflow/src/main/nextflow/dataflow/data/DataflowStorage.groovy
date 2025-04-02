@@ -11,25 +11,28 @@ class DataflowStorage {
     private final DataflowDag dag
     private final DataWriter inputFile
     private final DataWriter outputFile
-    private final Map<Path, TaskRun> outputs = new HashMap<>()
+    private final Path summaryFile
+    private final String delimiter
+    private final Map<Path, TaskStats> outputs = new HashMap<>()
+    private final Map<TaskRun, TaskStats> taskStats = new HashMap<>()
 
-    DataflowStorage( DataflowDag dag, DataWriter inputFile, DataWriter outputFile ) {
+    DataflowStorage( DataflowDag dag, DataWriter inputFile, DataWriter outputFile, Path summaryFile, String delimiter ) {
         this.dag = dag
         this.inputFile = inputFile
         this.outputFile = outputFile
+        this.summaryFile = summaryFile
+        this.delimiter = delimiter
     }
 
-
     void addInputs( TaskRun task, Collection<Path> inputs ) {
-        if ( dag ) {
-            inputsToDag( task, inputs )
-        }
+        log.info "Processing inputs for task: ${task.name} (${inputs.size()})"
+        long size = calculateSize(inputs)
+        this.taskStats.put( task, new TaskStats( task, inputs.size(), size) )
+        processInputs( task, inputs, size )
         inputFile?.addTask( task.name, task.hash.toString(), inputs )
     }
 
-    private void inputsToDag( TaskRun task, Collection<Path> inputs ) {
-
-        long inputSize = calculateSize( inputs )
+    private void processInputs( TaskRun task, Collection<Path> inputs, long inputSize ) {
         Map<TaskRun, DependencyStats> dependencies = new HashMap<>()
         DependencyStats extern = new DependencyStats()
 
@@ -37,17 +40,18 @@ class DataflowStorage {
             for (Path path in inputs) {
                 Path currentPath = path
                 // find creating task
-                TaskRun dependentTask
+                TaskStats fileStats
                 do {
-                    dependentTask = this.outputs.get( currentPath )
+                    fileStats = this.outputs.get( currentPath )
                     currentPath = currentPath.parent
-                } while( dependentTask == null && currentPath != null )
+                } while( fileStats == null && currentPath != null )
                 long size = calculateSize( path )
-                if ( dependentTask != null ) {
-                    if ( !dependencies.containsKey( dependentTask) ) {
-                        dependencies.put( dependentTask, new DependencyStats() )
+                if ( fileStats != null ) {
+                    if ( !dependencies.containsKey( fileStats.task ) ) {
+                        dependencies.put( fileStats.task, new DependencyStats() )
                     }
-                    dependencies.get( dependentTask ).addFile( size )
+                    dependencies.get( fileStats.task ).addFile( size )
+                    fileStats.addUsedBy( task )
                 } else {
                     extern.addFile( size )
                 }
@@ -59,18 +63,24 @@ class DataflowStorage {
     }
 
     void addOutputs(TaskRun task, Collection<Path> outputs ) {
+        TaskStats taskStats = taskStats.get( task )
+        long outputSize = calculateSize( outputs )
         synchronized (this.outputs) {
             for (final Path path in outputs) {
-                this.outputs.put( path, task )
+                this.outputs.put( path, taskStats )
+                taskStats.addOutputs( outputs.size(), outputSize )
             }
         }
-        dag?.addOutputsToVertex( task, outputs )
+        dag?.addOutputsToVertex( task, outputs, outputSize )
         outputFile?.addTask( task.name, task.hash.toString(), outputs )
     }
 
     void close() {
         inputFile?.close()
         outputFile?.close()
+        if ( summaryFile ) {
+            createSummary()
+        }
     }
 
     static long calculateSize( Collection<Path> files ) {
@@ -83,6 +93,23 @@ class DataflowStorage {
     static long calculateSize( Path path ) {
         File file = path.toFile()
         return file.directory ? file.directorySize() : file.length()
+    }
+
+    private void createSummary() {
+        try (PrintWriter writer = new PrintWriter(summaryFile.toFile())){
+            writer.println("Task${delimiter}hash${delimiter}inputs${delimiter}inputSize${delimiter}outputs${delimiter}outputSize${delimiter}usedBy")
+            taskStats.values().stream()
+                    .sorted { a, b -> a.task.id <=> b.task.id }
+                    .forEach { task ->
+                        String s = "${task.task.name}${delimiter}${task.task.hash}${delimiter}"
+                        s += "${task.inputs}${delimiter}${task.inputSize}${delimiter}"
+                        s += "${task.outputs}${delimiter}${task.outputSize}${delimiter}"
+                        s += "${task.getUsedByCount()}"
+                        writer.println(s)
+                    }
+        } catch (IOException e) {
+            log.error "Unable to write summary file: ${summaryFile.toUriString()}", e
+        }
     }
 
 

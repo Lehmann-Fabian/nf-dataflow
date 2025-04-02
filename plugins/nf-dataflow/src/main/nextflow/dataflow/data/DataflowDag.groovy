@@ -90,16 +90,13 @@ class DataflowDag extends DAG {
         }
     }
 
-    void addOutputsToVertex(TaskRun taskRun, Collection<Path> paths) {
+    void addOutputsToVertex(TaskRun taskRun, Collection<Path> paths, long outputSize) {
         String text
         int outputFiles
-        long outputSize
         if ( !paths ) {
             text = "No output files"
             outputFiles = 0
-            outputSize = 0
         } else {
-            outputSize = DataflowStorage.calculateSize( paths )
             String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
             outputFiles = paths.size()
             String outputFilesText = outputFiles > 1 ? 'files' : 'file'

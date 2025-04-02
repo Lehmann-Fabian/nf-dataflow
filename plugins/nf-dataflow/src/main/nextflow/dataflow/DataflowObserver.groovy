@@ -19,7 +19,6 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import nextflow.Session
-import nextflow.dag.DAG
 import nextflow.dag.DagRenderer
 import nextflow.dag.DotRenderer
 import nextflow.dag.GexfRenderer
@@ -49,6 +48,7 @@ class DataflowObserver implements TraceObserver {
     private final String dagFormat
     private final Path inputFile
     private final Path outputFile
+    private final Path summaryFile
     private final DataflowStorage storage
 
     DataflowObserver(Session session) {
@@ -73,11 +73,14 @@ class DataflowObserver implements TraceObserver {
         }
         inputFile = initializeDataCSV( session, 'Input' )
         outputFile = initializeDataCSV( session, 'Output' )
+        summaryFile = initializeDataCSV( session, 'Summary' )
         String delimiter = session.config.navigate('dataflow.delimiter') as String ?: ';'
         storage = new DataflowStorage(
                 dag,
                 inputFile ? new DataWriter(inputFile, delimiter) : null,
-                outputFile ? new DataWriter(outputFile, delimiter) : null
+                outputFile ? new DataWriter(outputFile, delimiter) : null,
+                summaryFile,
+                delimiter
         )
     }
 
