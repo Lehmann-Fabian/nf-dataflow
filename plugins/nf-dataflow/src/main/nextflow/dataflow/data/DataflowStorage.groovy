@@ -25,7 +25,6 @@ class DataflowStorage {
     }
 
     void addInputs( TaskRun task, Collection<Path> inputs ) {
-        log.info "Processing inputs for task: ${task.name} (${inputs.size()})"
         long size = calculateSize(inputs)
         this.taskStats.put( task, new TaskStats( task, inputs.size(), size) )
         processInputs( task, inputs, size )
