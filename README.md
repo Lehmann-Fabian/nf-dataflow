@@ -31,8 +31,8 @@ This generates a `physicalDag.html` file in your working directory.
 Supported formats: All formats Nextflow supports ([docs](https://www.nextflow.io/docs/latest/reports.html#workflow-diagram)).  
 **Tested format**: DOT.
 
-Example visualization:  
-![Dataflow](ExampleDag.jpg)
+Example visualization created with Graphviz:  
+![Dataflow](ExampleDag.svg)
 
 ### 2. Analyzing Process Inputs & Outputs
 Create CSV files to track input and output files:
