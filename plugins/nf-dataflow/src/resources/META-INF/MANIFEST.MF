@@ -3,4 +3,4 @@ Plugin-Id: nf-dataflow
 Plugin-Version: 0.0.1
 Plugin-Class: nextflow.dataflow.DataflowPlugin
 Plugin-Provider: nextflow
-Plugin-Requires: >=24.0.0
+Plugin-Requires: >=24.04.0
