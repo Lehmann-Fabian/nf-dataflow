@@ -139,17 +139,10 @@ class DataflowObserver implements TraceObserver {
 
     @Override
     void onProcessComplete(TaskHandler handler, TraceRecord trace) {
-        Map<OutParam, ?> outputs = handler.task.getOutputs()
-        Set<Path> outputFiles = new HashSet<>()
-        for (final def it in outputs.entrySet()) {
-            if (it.key instanceof FileOutParam) {
-                if (it.value instanceof Path) {
-                    outputFiles.add(it.value as Path)
-                } else if (it.value instanceof Collection) {
-                    outputFiles.addAll(it.value as Collection<Path>)
-                }
-            }
-        }
+        List<Path> outputFiles = handler.task.getOutputsByType(FileOutParam)
+                .values()
+                .flatten()
+                .unique() as List<Path>
         storage.addOutputs(handler.task, outputFiles)
     }
 
