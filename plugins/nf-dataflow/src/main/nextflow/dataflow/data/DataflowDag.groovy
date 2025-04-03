@@ -20,16 +20,10 @@ import java.nio.file.Path
 class DataflowDag extends DAG {
 
     private final Map<TaskRun, DataflowVertex> vertices = new HashMap<>()
-    private final boolean quoteName
+    private final boolean htmlNaming
 
     DataflowDag( String format ) {
-        if ( format.toLowerCase() in ["html", "mmd"] ) {
-            this.quoteName = true
-        } else if ( format.toLowerCase() in ["dot", "gexf"] ) {
-            this.quoteName = false
-        } else {
-            throw new IllegalArgumentException("Unsupported DAG format: ${format}")
-        }
+        htmlNaming = format.toLowerCase() in ["html"]
     }
 
     /**
@@ -37,13 +31,6 @@ class DataflowDag extends DAG {
      */
     String inputName0( InParamHelper value ) {
         return value.name
-    }
-
-    private String quoteName( String name ) {
-        if ( quoteName ) {
-            return "\"${name}\""
-        }
-        return name
     }
 
     private static String createInputString(long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
@@ -54,7 +41,7 @@ class DataflowDag extends DAG {
         long dependencySize = dependencies ? dependencies.values().sum { it.files } as long : 0L
         long inputFiles = dependencySize + extern.files
         String inputFilesText = inputFiles > 1 ? 'files' : 'file'
-        return "$inputFiles input $inputFilesText ($inputSizeText)"
+        return "Input: $inputFiles $inputFilesText ($inputSizeText)"
     }
 
     void addVertex( TaskRun task, long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
@@ -86,7 +73,7 @@ class DataflowDag extends DAG {
     void generate() {
         for (final Map.Entry<TaskRun, DataflowVertex> entry in vertices.entrySet()) {
             DataflowVertex vertice = entry.value
-            addProcessNode( quoteName(vertice.getSyntheticName()), vertice.getInputs(), vertice.getOutputs() )
+            addProcessNode( vertice.getSyntheticName(), vertice.getInputs(), vertice.getOutputs() )
         }
     }
 
@@ -100,13 +87,13 @@ class DataflowDag extends DAG {
             String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
             outputFiles = paths.size()
             String outputFilesText = outputFiles > 1 ? 'files' : 'file'
-            text = "$outputFiles output $outputFilesText ($sizeString)"
+            text = "Output: $outputFiles $outputFilesText ($sizeString)"
         }
         vertices.get( taskRun ).setOutputData( text, outputFiles, outputSize )
 
     }
 
-    private static class DataflowVertex {
+    private class DataflowVertex {
 
         private final String name
         private final String inputText
@@ -159,7 +146,15 @@ class DataflowDag extends DAG {
         }
 
         String getSyntheticName() {
-            return "<b>$name</b><br>$inputText" + (outputText ? "<br>$outputText" : "")
+            return htmlNaming ? getHTMLName() : getNonHtmlName()
+        }
+
+        String getHTMLName() {
+            return "<b>$name</b><br/>$inputText" + (outputText ? "<br/>$outputText" : "")
+        }
+
+        String getNonHtmlName() {
+            return "$name\n$inputText" + (outputText ? "\n$outputText" : "")
         }
 
     }

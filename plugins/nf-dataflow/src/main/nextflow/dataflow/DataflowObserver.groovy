@@ -28,6 +28,7 @@ import nextflow.dag.MermaidRenderer
 import nextflow.dataflow.data.DataWriter
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.data.DataflowStorage
+import nextflow.dataflow.renderer.DataflowDotRenderer
 import nextflow.exception.AbortOperationException
 import nextflow.file.FileHelper
 import nextflow.processor.TaskHandler
@@ -115,7 +116,7 @@ class DataflowObserver implements TraceObserver {
     @PackageScope
     DagRenderer createRender() {
         if( dagFormat == 'dot' )
-            new DotRenderer(dagName)
+            new DataflowDotRenderer(dagName)
 
         else if( dagFormat == 'html' )
             new MermaidHtmlRenderer()
