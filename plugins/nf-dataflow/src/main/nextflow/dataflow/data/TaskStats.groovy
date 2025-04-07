@@ -1,7 +1,9 @@
 package nextflow.dataflow.data
 
+import groovy.transform.CompileStatic
 import nextflow.processor.TaskRun
 
+@CompileStatic
 class TaskStats {
 
     private final TaskRun task

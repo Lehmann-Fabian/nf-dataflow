@@ -1,8 +1,8 @@
 package nextflow.dataflow.data
 
-import nextflow.dataflow.helper.DataflowWriteChannelHelper
-import nextflow.util.MemoryUnit
+import groovy.transform.CompileStatic
 
+@CompileStatic
 class DependencyStats {
 
     private long size = 0

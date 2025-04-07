@@ -1,7 +1,10 @@
 package nextflow.dataflow.data
 
+import groovy.transform.CompileStatic
+
 import java.nio.file.Path
 
+@CompileStatic
 class DataWriter {
 
     private final PrintWriter writer

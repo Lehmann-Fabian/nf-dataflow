@@ -1,9 +1,12 @@
 package nextflow.dataflow.helper;
 
-import java.awt.Color;
+import groovy.transform.CompileStatic;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@CompileStatic
 public class DistinctColorGenerator {
 
     public static List<String> generateDistinctColors(int n) {

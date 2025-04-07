@@ -1,11 +1,13 @@
 package nextflow.dataflow.data
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.processor.TaskRun
 
 import java.nio.file.Path
 
 @Slf4j
+@CompileStatic
 class DataflowStorage {
 
     private final DataflowDag dag

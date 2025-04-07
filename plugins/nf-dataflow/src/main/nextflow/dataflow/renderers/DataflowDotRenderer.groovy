@@ -1,5 +1,6 @@
 package nextflow.dag
 
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import nextflow.dataflow.helper.DistinctColorGenerator
@@ -7,6 +8,7 @@ import nextflow.dataflow.helper.DistinctColorGenerator
 import java.nio.file.Path;
 
 @Slf4j
+@CompileStatic
 class DataflowDotRenderer implements DagRenderer {
 
     private String name
