@@ -202,7 +202,8 @@ class DataflowDag {
 
         String getTag() {
             if ( taskName.contains( " (") ) {
-                return taskName.split( " \\(" )[1]
+                String tag = taskName.split(" \\(")[1]
+                return tag.endsWith(")") ? tag[0..-2] : tag
             } else {
                 return null
             }
