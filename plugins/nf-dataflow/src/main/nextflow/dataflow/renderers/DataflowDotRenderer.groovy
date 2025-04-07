@@ -1,7 +1,6 @@
 package nextflow.dataflow.renderers
 
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.helper.DistinctColorGenerator
@@ -18,6 +17,8 @@ class DataflowDotRenderer implements DagRenderer {
     private final boolean plotDetails
     private final boolean plotExternalInputs = false
     private final boolean plotLegend = false
+    private final boolean clusterByTag = true
+    private final boolean showTagNames = true
     private final List<Pattern> filterTasks = new LinkedList<>()
 
     /**
@@ -33,8 +34,7 @@ class DataflowDotRenderer implements DagRenderer {
         filterTasks.add(pattern)
     }
 
-    @PackageScope
-    static String normalise(String str) { str.replaceAll(/[^0-9_A-Za-z]/,'') }
+    private static String normalise(String str) { str.replaceAll(/[^0-9_A-Za-z]/,'') }
 
     @Override
     void renderDocument(DataflowDag dag, Path file) {
@@ -42,7 +42,7 @@ class DataflowDotRenderer implements DagRenderer {
         file.text = renderNetwork(dag)
     }
 
-    static List<String> createLegend(Map<String, String> colorMapForTasks, String commonName) {
+    private static List<String> createLegend(Map<String, String> colorMapForTasks, String commonName) {
         List<String> result = new LinkedList<>()
         result << "  // Legend"
         result << "  legend [shape=plain, margin=0.2, label=<"
@@ -67,7 +67,7 @@ class DataflowDotRenderer implements DagRenderer {
         return !filterProcess( edge.from as DataflowDag.Process ) && !filterProcess( edge.to as DataflowDag.Process )
     }
 
-    String renderNetwork(DataflowDag dag) {
+    private String renderNetwork(DataflowDag dag) {
         def result = []
         List<DataflowDag.Process> processesToPlot = dag.vertices
                 .findAll { it.isProcess() && !filterProcess(it as DataflowDag.Process) }
@@ -81,17 +81,19 @@ class DataflowDotRenderer implements DagRenderer {
         }
         result << "  // Vertices"
         String commonName = findCommonName(dag)
-        List<String> processes = processesToPlot
-                .groupBy { it.getRank() }
-                .collect { rank, values -> createRankSubgraph( rank, values, colorMapForTasks, commonName ) }
-                .flatten() as List<String>
-        result.addAll( processes )
+        List<String> processes
 
-        processes = processesToPlot
-            .groupBy { it.getTag() }
-            .findAll { e,v -> e != null }
-            .collect { e,v -> createTagSubgraph( e, v ) }
-            .flatten() as List<String>
+        if ( clusterByTag ) {
+            processes = processesToPlot
+                    .groupBy { it.getTag() }
+                    .collect { tag,values -> createTagSubgraph( tag, values, colorMapForTasks, commonName ) }
+                    .flatten() as List<String>
+        } else {
+            processes = processesToPlot
+                    .groupBy { it.getRank() }
+                    .collect { rank, values -> createRankSubgraph( rank, values, colorMapForTasks, commonName ) }
+                    .flatten() as List<String>
+        }
         result.addAll( processes )
 
         result << "  // Edges"
@@ -127,22 +129,33 @@ class DataflowDotRenderer implements DagRenderer {
         return result
     }
 
-    List<String> createRankSubgraph( int rank, List<DataflowDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
+    private List<String> createRankSubgraph( int rank, List<DataflowDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
         List<String> subgraph = new LinkedList<>()
         subgraph << "  subgraph \"Rank: $rank\" {".toString()
         subgraph << "    rank = same;"
-        List<String> verticesStrings = vertices.collect { renderProcess(it, colorMapForTasks, commonName) }
+        List<String> verticesStrings = vertices.collect { renderProcess(it, colorMapForTasks, commonName).indent(2) }
         subgraph.addAll(verticesStrings)
         subgraph << "  }"
         return subgraph
     }
 
-    List<String> createTagSubgraph( String tag, List<DataflowDag.Process> vertices ) {
+    private String createTagName(String tag ) {
+        return showTagNames ? "cluster_${normalise( tag )}" : tag
+    }
+
+    private List<String> createTagSubgraph( String tag, List<DataflowDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
         List<String> subgraph = new LinkedList<>()
-        subgraph << "  subgraph \"Tag: $tag\" {".toString()
-        subgraph << "    label=\"Tag: $tag\";".toString()
-        subgraph << "    " + vertices.collect { it.getID() } .join( ';' ) + ";"
-        subgraph << "  }"
+        if ( tag != null ) {
+            subgraph << "  subgraph \"${createTagName(tag)}\" {".toString()
+            subgraph << "    label=\"$tag\";".toString()
+            subgraph << "    style=\"rounded\";"
+        }
+        List<String> verticesStrings = vertices
+                .collect { renderProcess(it, colorMapForTasks, commonName).indent( tag == null ? 2 : 4 ) }
+        subgraph.addAll(verticesStrings)
+        if ( tag != null ) {
+            subgraph << "  }"
+        }
         return subgraph
     }
 
