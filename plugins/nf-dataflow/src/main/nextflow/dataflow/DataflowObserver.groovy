@@ -16,24 +16,18 @@ package nextflow.dataflow
  */
 
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import nextflow.Session
-import nextflow.dag.DagRenderer
-import nextflow.dag.DotRenderer
-import nextflow.dag.GexfRenderer
-import nextflow.dag.GraphvizRenderer
-import nextflow.dag.MermaidHtmlRenderer
-import nextflow.dag.MermaidRenderer
 import nextflow.dataflow.data.DataWriter
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.data.DataflowStorage
-import nextflow.dataflow.renderer.DataflowDotRenderer
+import nextflow.dataflow.helper.DAGStorage
+import nextflow.dataflow.renderers.DagRenderer
+import nextflow.dataflow.renderers.DataflowDotRenderer
 import nextflow.exception.AbortOperationException
 import nextflow.file.FileHelper
 import nextflow.processor.TaskHandler
 import nextflow.script.params.FileOutParam
-import nextflow.script.params.OutParam
 import nextflow.trace.TraceObserver
 import nextflow.trace.TraceRecord
 
@@ -47,6 +41,8 @@ class DataflowObserver implements TraceObserver {
     private final Path dagFile
     private final String dagName
     private final String dagFormat
+    private final Path persistFile
+    private final boolean detailed
     private final Path inputFile
     private final Path outputFile
     private final Path summaryFile
@@ -67,6 +63,8 @@ class DataflowObserver implements TraceObserver {
                     throw new AbortOperationException("DAG file already exists: ${dagFile.toUriString()} -- enable `dag.overwrite` in your config file to overwrite existing DAG files")
             }
             dag = new DataflowDag( dagFormat )
+            detailed = session.config.navigate('dataflow.detailed') as boolean
+            persistFile = session.config.navigate('dataflow.persist') as Path
         } else {
             dag = null
             dagName = null
@@ -106,29 +104,19 @@ class DataflowObserver implements TraceObserver {
     @Override
     void onFlowComplete() {
         if ( dag ) {
-            dag.generate()
-            dag.normalize()
+            dag.generateNames()
             createRender().renderDocument(dag,dagFile)
+            if ( persistFile ) {
+                new DAGStorage(dag).persist(persistFile)
+            }
         }
         storage.close()
     }
 
-    @PackageScope
     DagRenderer createRender() {
         if( dagFormat == 'dot' )
-            new DataflowDotRenderer(dagName)
-
-        else if( dagFormat == 'html' )
-            new MermaidHtmlRenderer()
-
-        else if( dagFormat == 'gexf' )
-            new GexfRenderer(dagName)
-
-        else if( dagFormat == 'mmd' )
-            new MermaidRenderer()
-
-        else
-            new GraphvizRenderer(dagName, dagFormat)
+            new DataflowDotRenderer(dagName, detailed)
+        else throw new AbortOperationException("Unsupported DAG format: ${dagFormat} -- supported formats are: dot")
     }
 
     @Override

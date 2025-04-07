@@ -13,13 +13,6 @@ class DependencyStats {
         this.files++
     }
 
-    DataflowWriteChannelHelper toChannel() {
-        String fileText = files > 1 ? 'files' : 'file'
-        String size = new MemoryUnit(size).toString().replace(" ", "")
-        String text = "$files $fileText ($size)"
-        return new DataflowWriteChannelHelper(text)
-    }
-
     boolean hasData() {
         return files
     }

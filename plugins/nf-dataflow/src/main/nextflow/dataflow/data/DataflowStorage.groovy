@@ -29,11 +29,11 @@ class DataflowStorage {
     void addInputs( TaskRun task, Collection<Path> inputs ) {
         long size = calculateSize(inputs)
         this.taskStats.put( task, new TaskStats( task, inputs.size(), size) )
-        processInputs( task, inputs, size )
+        processInputs( task, inputs )
         inputFile?.addTask( task.name, task.hash.toString(), inputs )
     }
 
-    private void processInputs( TaskRun task, Collection<Path> inputs, long inputSize ) {
+    private void processInputs( TaskRun task, Collection<Path> inputs ) {
         Map<TaskRun, DependencyStats> dependencies = new HashMap<>()
         DependencyStats extern = new DependencyStats()
 
@@ -59,7 +59,7 @@ class DataflowStorage {
             }
         }
 
-        dag?.addVertex( task, inputSize, dependencies, extern )
+        dag?.addVertex( task, dependencies, extern )
 
     }
 
