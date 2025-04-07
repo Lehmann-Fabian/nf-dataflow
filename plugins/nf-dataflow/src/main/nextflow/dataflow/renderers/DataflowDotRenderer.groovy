@@ -1,6 +1,7 @@
 package nextflow.dataflow.renderers
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.helper.DistinctColorGenerator
@@ -15,23 +16,32 @@ class DataflowDotRenderer implements DagRenderer {
 
     private final String name
     private final boolean plotDetails
-    private final boolean plotExternalInputs = false
-    private final boolean plotLegend = false
-    private final boolean clusterByTag = true
-    private final boolean showTagNames = true
-    private final List<Pattern> filterTasks = new LinkedList<>()
+    private final boolean plotExternalInputs
+    private final boolean plotLegend
+    private final boolean clusterByTag
+    private final boolean showTagNames
+    private final List<Pattern> filterTasks
 
     /**
      * Create a render instance
      *
      * @param name The graph name used in the DOT format
      */
-    DataflowDotRenderer( String name, boolean plotDetails ) {
+    DataflowDotRenderer( String name,
+                         boolean plotDetails,
+                         boolean plotExternalInputs,
+                         boolean plotLegend,
+                         boolean clusterByTag,
+                         boolean showTagNames,
+                         List<String> filterTasks
+    ) {
         this.name = normalise(name)
         this.plotDetails = plotDetails
-        String regex = ".*MULTIQC"
-        Pattern pattern = Pattern.compile(regex)
-        filterTasks.add(pattern)
+        this.filterTasks = filterTasks.collect {Pattern.compile(it) }
+        this.plotExternalInputs = plotExternalInputs
+        this.plotLegend = plotLegend
+        this.clusterByTag = clusterByTag
+        this.showTagNames = showTagNames
     }
 
     private static String normalise(String str) { str.replaceAll(/[^0-9_A-Za-z]/,'') }
@@ -67,7 +77,8 @@ class DataflowDotRenderer implements DagRenderer {
         return !filterProcess( edge.from as DataflowDag.Process ) && !filterProcess( edge.to as DataflowDag.Process )
     }
 
-    private String renderNetwork(DataflowDag dag) {
+    @PackageScope
+    String renderNetwork(DataflowDag dag) {
         def result = []
         List<DataflowDag.Process> processesToPlot = dag.vertices
                 .findAll { it.isProcess() && !filterProcess(it as DataflowDag.Process) }

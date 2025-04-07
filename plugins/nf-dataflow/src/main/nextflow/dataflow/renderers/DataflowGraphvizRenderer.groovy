@@ -3,6 +3,8 @@ package nextflow.dataflow.renderers
 import groovy.util.logging.Slf4j
 import nextflow.dataflow.data.DataflowDag
 
+import java.nio.file.Files
+
 /*
  * Copyright 2013-2024, Seqera Labs
  *
@@ -19,7 +21,6 @@ import nextflow.dataflow.data.DataflowDag
  * limitations under the License.
  */
 
-import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -29,14 +30,12 @@ import java.nio.file.Path
 @Slf4j
 class DataflowGraphvizRenderer implements DagRenderer {
 
-    private String format
-    private String name
-    private boolean plotDetails
+    private final String format
+    private final DataflowDotRenderer dotRenderer
 
-    DataflowGraphvizRenderer(String name, String format, boolean plotDetails) {
-        this.name = name
+    DataflowGraphvizRenderer( String format, DataflowDotRenderer dotRenderer ) {
         this.format = format
-        this.plotDetails = plotDetails
+        this.dotRenderer = dotRenderer
     }
 
     /**
@@ -49,7 +48,7 @@ class DataflowGraphvizRenderer implements DagRenderer {
         def result = Files.createTempFile('nxf-',".$format")
         def temp = Files.createTempFile('nxf-','.dot')
         // save the DAG as `dot` to a temp file
-        temp.text = new DataflowDotRenderer(name,plotDetails).renderNetwork(dag)
+        temp.text = dotRenderer.renderNetwork(dag)
 
         final cmd = "command -v dot &>/dev/null || exit 128 && dot -T${format} ${temp} > ${result}"
         final process = new ProcessBuilder().command("bash","-c", cmd).redirectErrorStream(true).start()

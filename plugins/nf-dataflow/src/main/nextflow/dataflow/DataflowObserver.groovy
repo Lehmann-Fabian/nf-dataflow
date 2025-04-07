@@ -18,7 +18,6 @@ package nextflow.dataflow
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.Session
-import nextflow.dag.GraphvizRenderer
 import nextflow.dataflow.data.DataWriter
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.data.DataflowStorage
@@ -44,7 +43,15 @@ class DataflowObserver implements TraceObserver {
     private final String dagName
     private final String dagFormat
     private final Path persistFile
+
     private final boolean detailed
+    private final boolean plotExternalInputs
+    private final boolean plotLegend
+    private final boolean clusterByTag
+    private final boolean showTagNames
+    private final List<String> filterTasks
+
+
     private final Path inputFile
     private final Path outputFile
     private final Path summaryFile
@@ -65,13 +72,26 @@ class DataflowObserver implements TraceObserver {
                     throw new AbortOperationException("DAG file already exists: ${dagFile.toUriString()} -- enable `dag.overwrite` in your config file to overwrite existing DAG files")
             }
             dag = new DataflowDag( dagFormat )
-            detailed = session.config.navigate('dataflow.detailed') as boolean
-            persistFile = session.config.navigate('dataflow.persist') as Path
+
+            detailed = session.config.navigate('dataflow.plot.detailed') as boolean
+            plotExternalInputs = session.config.navigate('dataflow.plot.external') as boolean
+            plotLegend = session.config.navigate('dataflow.plot.legend') as boolean
+            clusterByTag = session.config.navigate('dataflow.plot.cluster') as boolean
+            showTagNames = session.config.navigate('dataflow.plot.tagNames') as boolean
+            filterTasks = session.config.navigate('dataflow.plot.filter') as List<String>
+
         } else {
             dag = null
             dagName = null
             dagFormat = null
+            detailed = false
+            plotExternalInputs = false
+            plotLegend = false
+            clusterByTag = false
+            showTagNames = false
+            filterTasks = null
         }
+        persistFile = session.config.navigate('dataflow.persist') as Path
         inputFile = initializeDataCSV( session, 'Input' )
         outputFile = initializeDataCSV( session, 'Output' )
         summaryFile = initializeDataCSV( session, 'Summary' )
@@ -116,11 +136,8 @@ class DataflowObserver implements TraceObserver {
     }
 
     DagRenderer createRender() {
-        if( dagFormat == 'dot' ) {
-            return new DataflowDotRenderer(dagName, detailed)
-        } else {
-            return new DataflowGraphvizRenderer(dagName, dagFormat, detailed)
-        }
+        DataflowDotRenderer renderer = new DataflowDotRenderer(dagName, detailed, plotExternalInputs, plotLegend, clusterByTag, showTagNames, filterTasks)
+        return dagFormat == 'dot' ? renderer : new DataflowGraphvizRenderer( dagFormat, renderer )
     }
 
     @Override
