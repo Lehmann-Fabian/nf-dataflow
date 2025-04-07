@@ -73,12 +73,12 @@ class DataflowObserver implements TraceObserver {
             }
             dag = new DataflowDag( dagFormat )
 
-            detailed = session.config.navigate('dataflow.plot.detailed') as boolean
-            plotExternalInputs = session.config.navigate('dataflow.plot.external') as boolean
-            plotLegend = session.config.navigate('dataflow.plot.legend') as boolean
-            clusterByTag = session.config.navigate('dataflow.plot.cluster') as boolean
-            showTagNames = session.config.navigate('dataflow.plot.tagNames') as boolean
-            filterTasks = session.config.navigate('dataflow.plot.filter') as List<String>
+            detailed = (session.config.navigate('dataflow.plot.detailed') ?: false) as boolean
+            plotExternalInputs = (session.config.navigate('dataflow.plot.external') ?: true) as boolean
+            plotLegend = (session.config.navigate('dataflow.plot.legend') ?: true) as boolean
+            clusterByTag = (session.config.navigate('dataflow.plot.cluster') ?: false) as boolean
+            showTagNames = (session.config.navigate('dataflow.plot.tagNames') ?: true) as boolean
+            filterTasks = (session.config.navigate('dataflow.plot.filter') ?: []) as List<String>
 
         } else {
             dag = null
