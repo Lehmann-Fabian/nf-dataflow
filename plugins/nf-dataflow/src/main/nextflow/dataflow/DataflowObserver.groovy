@@ -44,6 +44,7 @@ class DataflowObserver implements TraceObserver {
     private final String dagFormat
     private final Path persistFile
 
+    private final String rankdir
     private final boolean detailed
     private final boolean plotExternalInputs
     private final boolean plotLegend
@@ -73,12 +74,13 @@ class DataflowObserver implements TraceObserver {
             }
             dag = new DataflowDag( dagFormat )
 
-            detailed = (session.config.navigate('dataflow.plot.detailed') ?: false) as boolean
-            plotExternalInputs = (session.config.navigate('dataflow.plot.external') ?: true) as boolean
-            plotLegend = (session.config.navigate('dataflow.plot.legend') ?: true) as boolean
-            clusterByTag = (session.config.navigate('dataflow.plot.cluster') ?: false) as boolean
-            showTagNames = (session.config.navigate('dataflow.plot.tagNames') ?: true) as boolean
-            filterTasks = (session.config.navigate('dataflow.plot.filter') ?: []) as List<String>
+            rankdir = session.config.navigate('dataflow.plot.rankdir') as String ?: 'TB'
+            detailed = session.config.navigate('dataflow.plot.detailed') as boolean ?: false
+            plotExternalInputs = session.config.navigate('dataflow.plot.external') as boolean ?: true
+            plotLegend = session.config.navigate('dataflow.plot.legend') as boolean ?: true
+            clusterByTag = session.config.navigate('dataflow.plot.cluster') as boolean ?: false
+            showTagNames = session.config.navigate('dataflow.plot.tagNames') as boolean ?: true
+            filterTasks = session.config.navigate('dataflow.plot.filter') as List<String> ?: new LinkedList<String>()
 
         } else {
             dag = null
@@ -136,7 +138,7 @@ class DataflowObserver implements TraceObserver {
     }
 
     DagRenderer createRender() {
-        DataflowDotRenderer renderer = new DataflowDotRenderer(dagName, detailed, plotExternalInputs, plotLegend, clusterByTag, showTagNames, filterTasks)
+        DataflowDotRenderer renderer = new DataflowDotRenderer(dagName, rankdir, detailed, plotExternalInputs, plotLegend, clusterByTag, showTagNames, filterTasks)
         return dagFormat == 'dot' ? renderer : new DataflowGraphvizRenderer( dagFormat, renderer )
     }
 

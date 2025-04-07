@@ -20,6 +20,7 @@ class DataflowDotRenderer implements DagRenderer {
     private final boolean plotLegend
     private final boolean clusterByTag
     private final boolean showTagNames
+    private final String rankDir
     private final List<Pattern> filterTasks
 
     /**
@@ -28,6 +29,7 @@ class DataflowDotRenderer implements DagRenderer {
      * @param name The graph name used in the DOT format
      */
     DataflowDotRenderer( String name,
+                         String rankDir,
                          boolean plotDetails,
                          boolean plotExternalInputs,
                          boolean plotLegend,
@@ -36,6 +38,7 @@ class DataflowDotRenderer implements DagRenderer {
                          List<String> filterTasks
     ) {
         this.name = normalise(name)
+        this.rankDir = rankDir
         this.plotDetails = plotDetails
         this.filterTasks = filterTasks.collect {Pattern.compile(it) }
         this.plotExternalInputs = plotExternalInputs
@@ -85,7 +88,7 @@ class DataflowDotRenderer implements DagRenderer {
                 .collect { it as DataflowDag.Process }
         Map<String, String> colorMapForTasks = createColorMapForTasks( processesToPlot )
         result << "digraph \"${this.name}\" {"
-        result << "  rankdir=TB;" // arguments: LR or TB
+        result << "  rankdir=$rankDir;"
         result << "  ranksep=${plotDetails ? 1.0 : 0.4};"
         if ( plotExternalInputs ) {
             result.addAll( createExternalInputs( dag.vertices ) )
