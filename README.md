@@ -23,16 +23,30 @@ Specify an output file in your Nextflow config:
 
 ```nextflow
 dataflow {
-    dag = "physicalDag.html"
+    dag = "physicalDag.dot"
 }
 ```
 
-This generates a `physicalDag.html` file in your working directory.  
-Supported formats: All formats Nextflow supports ([docs](https://www.nextflow.io/docs/latest/reports.html#workflow-diagram)).  
-**Tested format**: DOT.
+This generates a `physicalDag.dot` file in your working directory.  
+Supported formats: dot and all Graphviz formats.
+Graphviz is required to visualize formats other than `dot`.
 
 Example visualization created with Graphviz:  
 ![Dataflow](ExampleDag.svg)
+
+The following options control the DAG’s appearance:
+Options are set in the **`dataflow.plot`** block in your Nextflow config.
+
+
+| Option         | Default Value | Description                                                                                                      |
+|----------------|---------------|------------------------------------------------------------------------------------------------------------------|
+| **`rankdir`**  | `TB`          | Direction of the graph layout. Options: `TB` (top to bottom), `LR` (left to right).                              |
+| **`detailed`** | `false`       | If `true`, shows detailed information about each process in the DAG. Otherwise only on mouse over.               |
+| **`external`** | `true`        | If `true`, shows external inputs in the DAG.                                                                     |
+| **`legend`**   | `true`        | If `true`, shows a legend in the DAG.                                                                            |
+| **`cluster`**  | `false`       | If `true`, clusters processes by their tag.                                                                      |
+| **`tagNames`** | `true`        | If `true`, shows tag name in the cluster. Only takes effect if cluster is set to `true`.                         |
+| **`filter`**   | `[]`          | List of regex filters. If one regex matches a process name task instances of this process will not be displayed. |
 
 ### 2. Analyzing Process Inputs & Outputs
 Create CSV files to track input and output files:
