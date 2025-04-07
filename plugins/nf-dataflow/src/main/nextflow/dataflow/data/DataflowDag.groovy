@@ -1,160 +1,107 @@
-package nextflow.dataflow.data
+package nextflow.dag
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import nextflow.dag.DAG
-import nextflow.dataflow.helper.BaseScriptHelper
-import nextflow.dataflow.helper.DataflowWriteChannelHelper
-import nextflow.dataflow.helper.InParamHelper
-import nextflow.dataflow.helper.OutParamHelper
+import nextflow.dataflow.data.DependencyStats
 import nextflow.processor.TaskRun
-import nextflow.script.ProcessConfig
-import nextflow.script.params.DefaultInParam
-import nextflow.script.params.DefaultOutParam
-import nextflow.script.params.InputsList
-import nextflow.script.params.OutputsList
-import nextflow.util.MemoryUnit
 
 import java.nio.file.Path
 
 @Slf4j
+@CompileStatic
 class DataflowDag extends DAG {
 
-    private final Map<TaskRun, DataflowVertex> vertices = new HashMap<>()
+    private final Map<TaskRun, DataflowVertex> taskToVertex = new HashMap<>()
     private final boolean htmlNaming
 
     DataflowDag( String format ) {
         htmlNaming = format.toLowerCase() in ["html"]
     }
 
-    /**
-     * This method is required as Groovy otherwise throws an error
-     */
-    String inputName0( InParamHelper value ) {
-        return value.name
-    }
-
-    private static String createInputString(long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
-        if ( !dependencies && !extern.hasData() ) {
-            return "No input files"
-        }
-        String inputSizeText = MemoryUnit.of(inputSize).toString().replace(" ", "")
-        long dependencySize = dependencies ? dependencies.values().sum { it.files } as long : 0L
-        long inputFiles = dependencySize + extern.files
-        String inputFilesText = inputFiles > 1 ? 'files' : 'file'
-        return "Input: $inputFiles $inputFilesText ($inputSizeText)"
-    }
-
-    void addVertex( TaskRun task, long inputSize, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
+    void addVertex(TaskRun task, Map<TaskRun, DependencyStats> dependencies, DependencyStats extern ) {
         String name = task.name
-        String inputText = createInputString( inputSize, dependencies, extern )
-        DataflowVertex vertice = new DataflowVertex( name, inputText )
+        DataflowVertex vertice = new DataflowVertex( name )
 
         for (final Map.Entry<TaskRun, DependencyStats> entry in dependencies.entrySet()) {
-            DataflowWriteChannelHelper channel = entry.value.toChannel()
-            DataflowVertex from = vertices.get( entry.key )
+            DataflowVertex from = taskToVertex.get( entry.key )
             if ( from == null ) {
                 log.warn "Could not find vertex for task ${entry.key.name} in DAG"
                 continue
             }
-            vertice.addInput( channel )
-            from.addOutput( channel )
+            addEdge( from, vertice, entry.value )
         }
 
         if ( extern.hasData() ) {
-            DataflowWriteChannelHelper channel = extern.toChannel()
-            vertice.addInput( channel )
-        } else if ( dependencies.isEmpty() ) {
-            vertice.addInput( new DataflowWriteChannelHelper("No input files") )
+            addEdge( new Vertex( Type.ORIGIN ), vertice, extern )
         }
 
-        this.vertices.put( task, vertice )
+        this.taskToVertex.put( task, vertice )
+        getVertices().add( vertice )
     }
 
-    void generate() {
-        for (final Map.Entry<TaskRun, DataflowVertex> entry in vertices.entrySet()) {
-            DataflowVertex vertice = entry.value
-            addProcessNode( vertice.getSyntheticName(), vertice.getInputs(), vertice.getOutputs() )
-        }
+    private void addEdge( Vertex from, DataflowVertex to, DependencyStats stats ) {
+        to.setInputData( stats.files, stats.size )
+        DataflowEdge edge = new DataflowEdge( from: from, to: to )
+        edge.setInputData( stats.files, stats.size )
+        getEdges().add( edge )
     }
 
     void addOutputsToVertex(TaskRun taskRun, Collection<Path> paths, long outputSize) {
-        String text
-        int outputFiles
-        if ( !paths ) {
-            text = "No output files"
-            outputFiles = 0
-        } else {
-            String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
-            outputFiles = paths.size()
-            String outputFilesText = outputFiles > 1 ? 'files' : 'file'
-            text = "Output: $outputFiles $outputFilesText ($sizeString)"
-        }
-        vertices.get( taskRun ).setOutputData( text, outputFiles, outputSize )
-
+        taskToVertex.get( taskRun ).setOutputData( paths.size(), outputSize )
     }
 
-    private class DataflowVertex {
+    private class DataflowVertex extends DAG.Vertex {
 
-        private final String name
-        private final String inputText
-        private String outputText = null
-        private final InputsList inputs = new InputsList()
-        private final OutputsList outputs = new OutputsList()
         private int outputFiles = 0
         private long outputSize = 0
+        private int inputFiles = 0
+        private long inputSize = 0
 
-        DataflowVertex( String name, String inputText ) {
-            this.name = name
-            this.inputText = inputText
+        DataflowVertex( String label ) {
+            super( DAG.Type.PROCESS, label )
         }
 
-        void addInput( DataflowWriteChannelHelper input ) {
-            def param = new InParamHelper( input)
-            inputs.add( param )
+
+        void setInputData( int inputFiles, long inputSize ) {
+            this.inputFiles = inputFiles
+            this.inputSize = inputSize
         }
 
-        InputsList getInputs() {
-            if ( !inputs ) {
-                inputs.add( new DefaultInParam( new ProcessConfig( new BaseScriptHelper(), null ) ) )
-            }
-            return inputs
-        }
-
-        OutputsList getOutputs() {
-            if ( !outputs ) {
-                outputs.add( new DefaultOutParam( new ProcessConfig( new BaseScriptHelper(), null ) ) )
-            }
-            return outputs
-        }
-
-        int getOutputFiles() {
-            return outputFiles
-        }
-
-        long getOutputSize() {
-            return outputSize
-        }
-
-        void addOutput( DataflowWriteChannelHelper output ) {
-            outputs.add( new OutParamHelper( output ) )
-        }
-
-        void setOutputData( String text, int outputFiles, long outputSize ) {
-            outputText = text
+        void setOutputData( int outputFiles, long outputSize ) {
             this.outputFiles = outputFiles
             this.outputSize = outputSize
         }
 
-        String getSyntheticName() {
-            return htmlNaming ? getHTMLName() : getNonHtmlName()
+//        if ( !paths ) {
+//            text = "No output files"
+//            outputFiles = 0
+//        } else {
+//            String sizeString = MemoryUnit.of( outputSize ).toString().replace( " ", "" )
+//            outputFiles = paths.size()
+//            String outputFilesText = outputFiles > 1 ? 'files' : 'file'
+//            text = "Output: $outputFiles $outputFilesText ($sizeString)"
+//        }
+
+        String getLabel() {
+            return label + "ByUs"
         }
 
-        String getHTMLName() {
-            return "<b>$name</b><br/>$inputText" + (outputText ? "<br/>$outputText" : "")
+    }
+
+    @CompileDynamic
+    class DataflowEdge extends DAG.Edge {
+
+        private int inputFiles = 0
+        private long inputSize = 0
+
+        DataflowEdge(Map args) {
+            super(args)
         }
 
-        String getNonHtmlName() {
-            return "$name\n$inputText" + (outputText ? "\n$outputText" : "")
+        void setInputData( int inputFiles, long inputSize ) {
+            this.inputFiles = inputFiles
+            this.inputSize = inputSize
         }
 
     }

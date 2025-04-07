@@ -1,9 +1,7 @@
-package nextflow.dataflow.renderer
+package nextflow.dag
 
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
-import nextflow.dag.DAG;
-import nextflow.dag.DagRenderer
 import nextflow.dataflow.helper.DistinctColorGenerator
 
 import java.nio.file.Path;
