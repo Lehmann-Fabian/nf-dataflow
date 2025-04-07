@@ -18,12 +18,14 @@ package nextflow.dataflow
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.Session
+import nextflow.dag.GraphvizRenderer
 import nextflow.dataflow.data.DataWriter
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.data.DataflowStorage
 import nextflow.dataflow.helper.DAGStorage
 import nextflow.dataflow.renderers.DagRenderer
 import nextflow.dataflow.renderers.DataflowDotRenderer
+import nextflow.dataflow.renderers.DataflowGraphvizRenderer
 import nextflow.exception.AbortOperationException
 import nextflow.file.FileHelper
 import nextflow.processor.TaskHandler
@@ -114,9 +116,11 @@ class DataflowObserver implements TraceObserver {
     }
 
     DagRenderer createRender() {
-        if( dagFormat == 'dot' )
-            new DataflowDotRenderer(dagName, detailed)
-        else throw new AbortOperationException("Unsupported DAG format: ${dagFormat} -- supported formats are: dot")
+        if( dagFormat == 'dot' ) {
+            return new DataflowDotRenderer(dagName, detailed)
+        } else {
+            return new DataflowGraphvizRenderer(dagName, dagFormat, detailed)
+        }
     }
 
     @Override
