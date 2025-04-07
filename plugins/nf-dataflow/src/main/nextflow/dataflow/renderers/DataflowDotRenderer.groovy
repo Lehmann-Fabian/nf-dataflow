@@ -146,17 +146,12 @@ class DataflowDotRenderer implements DagRenderer {
         return subgraph
     }
 
-    private static String extractTaskName(String name) {
-        if ( !name ) return null
-        return name.split(" ")[0]
-    }
-
     private static Map<String, String> createColorMapForTasks( List<DataflowDag.Process> vertices ) {
         Map<String, String> colorMap = [:]
 
         // Sorting guarantees that the same task name will always get the same color if the workflow does not change
         List<String> taskNames = vertices
-                .collect { extractTaskName((it as DataflowDag.Process).taskName) }
+                .collect {(it as DataflowDag.Process).getProcessName() }
                 .unique()
                 .sort()
         List<String> colors = DistinctColorGenerator.generateDistinctColors(taskNames.size())
@@ -172,7 +167,7 @@ class DataflowDotRenderer implements DagRenderer {
     private static String findCommonName( DataflowDag dag ) {
         List<String[]> taskNames = dag.vertices
                 .findAll { it.isProcess() }
-                .collect { extractTaskName((it as DataflowDag.Process).taskName) }
+                .collect { (it as DataflowDag.Process).getProcessName() }
                 .findAll { it != null }
                 .unique()
                 .collect { it.split(":") }
@@ -246,8 +241,8 @@ class DataflowDotRenderer implements DagRenderer {
             attrs << "tooltip=\"$tooltipText\""
         }
         attrs << "style=filled"
-        attrs << "fillcolor=\"${colorMapForTasks[extractTaskName(process.taskName)]}\""
-        return "  ${process.getID()} [${attrs.join(',')}];"
+        attrs << "fillcolor=\"${colorMapForTasks[process.getProcessName()]}\""
+        return "${process.getID()} [${attrs.join(',')}];"
     }
 
     private String renderEdge(DataflowDag.Edge edge, Map<String, String> colorMapForTasks, long minimumEdgeWidth, long maximumEdgeWidth) {
@@ -266,7 +261,7 @@ class DataflowDotRenderer implements DagRenderer {
             double thickness = edge.inputSize / maximumEdgeWidth + 0.08
             attrs << "penwidth=${thickness * 8}"
         }
-        String toColor = colorMapForTasks[extractTaskName(edge.to?.taskName)]
+        String toColor = colorMapForTasks[edge.to?.getProcessName()]
         if ( toColor ) {
             attrs << "color=\"${toColor}\""
         }
