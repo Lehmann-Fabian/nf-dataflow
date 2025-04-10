@@ -34,7 +34,7 @@ Example visualization created with Graphviz, details activated:
 
 Example visualization created with Graphviz, details deactivated (recommended for large DAGs), no legend, and filtering MULTIQC:
 ![Dataflow](ExampleDagNoDetails.svg)
-Additional details are available on mouse hover.
+Additional details are available on mouse hover if you view it on [full size](https://raw.githubusercontent.com/Lehmann-Fabian/nf-dataflow/refs/heads/master/ExampleDagNoDetails.svg).
 
 The following options control the DAG’s rendering:
 Options are set in the **`dataflow.plot`** block in your Nextflow config.
