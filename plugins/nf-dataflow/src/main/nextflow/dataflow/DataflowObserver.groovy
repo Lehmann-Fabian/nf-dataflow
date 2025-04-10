@@ -59,7 +59,7 @@ class DataflowObserver implements TraceObserver {
     private final DataflowStorage storage
 
     DataflowObserver(Session session) {
-        dagFile = session.config.navigate('dataflow.dag') as Path
+        dagFile = session.config.navigate('dataflow.plot.file') as Path
         if ( dagFile != null ) {
             dagFormat = dagFile.getExtension().toLowerCase() ?: 'html'
             dagName = dagFile.getBaseName()

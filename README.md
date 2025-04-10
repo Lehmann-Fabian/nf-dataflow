@@ -22,9 +22,7 @@ plugins {
 Specify an output file in your Nextflow config:
 
 ```nextflow
-dataflow {
-    dag = "physicalDag.dot"
-}
+dataflow.plot.file = "physicalDag.dot"
 ```
 
 This generates a `physicalDag.dot` file in your working directory.  
@@ -34,12 +32,13 @@ Graphviz is required to visualize formats other than `dot`.
 Example visualization created with Graphviz:  
 ![Dataflow](ExampleDag.svg)
 
-The following options control the DAG’s appearance:
+The following options control the DAG’s rendering:
 Options are set in the **`dataflow.plot`** block in your Nextflow config.
 
 
 | Option         | Default Value | Description                                                                                                      |
 |----------------|---------------|------------------------------------------------------------------------------------------------------------------|
+| **`file`**     | ---           | The path where the DAG will be stored.                                                                           |
 | **`rankdir`**  | `TB`          | Direction of the graph layout. Options: `TB` (top to bottom), `LR` (left to right).                              |
 | **`detailed`** | `false`       | If `true`, shows detailed information about each process in the DAG. Otherwise only on mouse over.               |
 | **`external`** | `true`        | If `true`, shows external inputs in the DAG.                                                                     |
