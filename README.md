@@ -47,6 +47,13 @@ Options are set in the **`dataflow.plot`** block in your Nextflow config.
 | **`tagNames`** | `true`        | If `true`, shows tag name in the cluster. Only takes effect if cluster is set to `true`.                         |
 | **`filter`**   | `[]`          | List of regex filters. If one regex matches a process name task instances of this process will not be displayed. |
 
+Additionally, you can set a path to write the physical DAG as a `JSON` with the following options:
+
+```nextflow
+dataflow.persist = "dag.json"
+```
+This file can be used for further analyses.
+
 ### 2. Analyzing Process Inputs & Outputs
 Create CSV files to track input and output files:
 
