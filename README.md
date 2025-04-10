@@ -75,6 +75,7 @@ Generated files:
 | **hash**  | Process hash (matches trace file) |
 | **path**  | Input/output file path            |
 | **type**  | `f` (file) or `d` (directory)     |
+| **size**  | Size of the file/directory        |
 
 ### 3. Analyzing Task Dependencies
 Generate a summary file with process dependencies and data volume:
