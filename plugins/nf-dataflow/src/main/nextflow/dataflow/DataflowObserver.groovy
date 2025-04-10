@@ -22,6 +22,7 @@ import nextflow.dataflow.data.DataWriter
 import nextflow.dataflow.data.DataflowDag
 import nextflow.dataflow.data.DataflowStorage
 import nextflow.dataflow.helper.DAGStorage
+import nextflow.dataflow.helper.StringHelper
 import nextflow.dataflow.renderers.DagRenderer
 import nextflow.dataflow.renderers.DataflowDotRenderer
 import nextflow.dataflow.renderers.DataflowGraphvizRenderer
@@ -63,7 +64,7 @@ class DataflowObserver implements TraceObserver {
         if ( dagFile != null ) {
             dagFormat = dagFile.getExtension().toLowerCase() ?: 'html'
             dagName = dagFile.getBaseName()
-            boolean dagOverwrite = session.config.navigate('dataflow.overwrite') as boolean
+            boolean dagOverwrite = StringHelper.stringToBoolean(session.config.navigate('dataflow.overwrite'), false)
             // check file existence
             final attrs = FileHelper.readAttributes(dagFile)
             if( attrs ) {
@@ -75,11 +76,11 @@ class DataflowObserver implements TraceObserver {
             dag = new DataflowDag( dagFormat )
 
             rankdir = session.config.navigate('dataflow.plot.rankdir') as String ?: 'TB'
-            detailed = session.config.navigate('dataflow.plot.detailed') as boolean ?: false
-            plotExternalInputs = session.config.navigate('dataflow.plot.external') as boolean ?: true
-            plotLegend = session.config.navigate('dataflow.plot.legend') as boolean ?: true
-            clusterByTag = session.config.navigate('dataflow.plot.cluster') as boolean ?: false
-            showTagNames = session.config.navigate('dataflow.plot.tagNames') as boolean ?: true
+            detailed = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.detailed'), false )
+            plotExternalInputs = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.external'), true )
+            plotLegend = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.legend'), true )
+            clusterByTag = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.cluster'), false )
+            showTagNames = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.tagNames'), true )
             filterTasks = session.config.navigate('dataflow.plot.filter') as List<String> ?: new LinkedList<String>()
 
         } else {
@@ -112,7 +113,7 @@ class DataflowObserver implements TraceObserver {
         if ( file != null ) {
             if ( file.getExtension().toLowerCase() != 'csv' )
                 throw new AbortOperationException("$name file must be a CSV file: ${file.toUriString()}")
-            boolean inputOverwrite = session.config.navigate('dataflow.overwrite') as boolean
+            boolean inputOverwrite = StringHelper.stringToBoolean( session.config.navigate('dataflow.overwrite'), false )
             // check file existence
             final attrs = FileHelper.readAttributes(file)
             if( attrs ) {
