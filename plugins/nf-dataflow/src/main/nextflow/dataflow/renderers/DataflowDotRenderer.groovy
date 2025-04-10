@@ -77,7 +77,8 @@ class DataflowDotRenderer implements DagRenderer {
     }
 
     private boolean keepEdge(DataflowDag.Edge edge ) {
-        return !filterProcess( edge.from as DataflowDag.Process ) && !filterProcess( edge.to as DataflowDag.Process )
+        return (edge.from.isOrigin() || !filterProcess( edge.from as DataflowDag.Process ))
+                && !filterProcess( edge.to as DataflowDag.Process )
     }
 
     @PackageScope
