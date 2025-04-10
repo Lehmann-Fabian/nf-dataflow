@@ -29,23 +29,27 @@ This generates a `physicalDag.dot` file in your working directory.
 Supported formats: dot and all Graphviz formats.
 Graphviz is required to visualize formats other than `dot`.
 
-Example visualization created with Graphviz:  
-![Dataflow](ExampleDag.svg)
+Example visualization created with Graphviz, details activated:  
+![Dataflow](ExampleDagDetails.svg)
+
+Example visualization created with Graphviz, details deactivated (recommended for large DAGs), no legend, and filtering MULTIQC:
+![Dataflow](ExampleDagNoDetails.svg)
+Additional details are available on mouse hover.
 
 The following options control the DAG’s rendering:
 Options are set in the **`dataflow.plot`** block in your Nextflow config.
 
 
-| Option         | Default Value | Description                                                                                                      |
-|----------------|---------------|------------------------------------------------------------------------------------------------------------------|
-| **`file`**     | ---           | The path where the DAG will be stored.                                                                           |
-| **`rankdir`**  | `TB`          | Direction of the graph layout. Options: `TB` (top to bottom), `LR` (left to right).                              |
-| **`detailed`** | `false`       | If `true`, shows detailed information about each process in the DAG. Otherwise only on mouse over.               |
-| **`external`** | `true`        | If `true`, shows external inputs in the DAG.                                                                     |
-| **`legend`**   | `true`        | If `true`, shows a legend in the DAG.                                                                            |
-| **`cluster`**  | `false`       | If `true`, clusters processes by their tag.                                                                      |
-| **`tagNames`** | `true`        | If `true`, shows tag name in the cluster. Only takes effect if cluster is set to `true`.                         |
-| **`filter`**   | `[]`          | List of regex filters. If one regex matches a process name task instances of this process will not be displayed. |
+| Option         | Default Value | Description                                                                                                          |
+|----------------|---------------|----------------------------------------------------------------------------------------------------------------------|
+| **`file`**     | ---           | The path where the DAG will be stored.                                                                               |
+| **`rankdir`**  | `TB`          | Direction of the graph layout. Options: `TB` (top to bottom), `LR` (left to right).                                  |
+| **`detailed`** | `false`       | If `true`, shows detailed information about each process in the DAG. Otherwise only on mouse over.                   |
+| **`external`** | `true`        | If `true`, shows external inputs in the DAG.                                                                         |
+| **`legend`**   | `true`        | If `true`, shows a legend in the DAG.                                                                                |
+| **`cluster`**  | `false`       | If `true`, clusters processes by their tag.                                                                          |
+| **`tagNames`** | `true`        | If `true`, shows tag name in the cluster. Only takes effect if cluster is set to `true`.                             |
+| **`filter`**   | `[]`          | List of regex filters. If one regex matches a process name task instances of this process will **not** be displayed. |
 
 Additionally, you can set a path to write the physical DAG as a `JSON` with the following options:
 
