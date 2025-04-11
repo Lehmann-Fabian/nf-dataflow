@@ -1,4 +1,4 @@
-package nextflow.dataflow.data
+package nextflow.datatrail.data
 
 import groovy.transform.CompileStatic
 
@@ -23,7 +23,7 @@ class DataWriter {
     void addTask( String name, String hash, Collection<Path> data ) {
         synchronized (writer) {
             data.each { path ->
-                def size = DataflowStorage.calculateSize( path )
+                def size = DatatrailStorage.calculateSize( path )
                 writeLine(name, hash, path.toString(), path.isDirectory() ? 'd' : 'f', size)
             }
             writer.flush()

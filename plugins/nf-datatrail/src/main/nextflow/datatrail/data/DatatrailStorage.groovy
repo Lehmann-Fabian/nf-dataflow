@@ -1,4 +1,4 @@
-package nextflow.dataflow.data
+package nextflow.datatrail.data
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -8,9 +8,9 @@ import java.nio.file.Path
 
 @Slf4j
 @CompileStatic
-class DataflowStorage {
+class DatatrailStorage {
 
-    private final DataflowDag dag
+    private final DatatrailDag dag
     private final DataWriter inputFile
     private final DataWriter outputFile
     private final Path summaryFile
@@ -18,7 +18,7 @@ class DataflowStorage {
     private final Map<Path, TaskStats> outputs = new HashMap<>()
     private final Map<TaskRun, TaskStats> taskStats = new HashMap<>()
 
-    DataflowStorage( DataflowDag dag, DataWriter inputFile, DataWriter outputFile, Path summaryFile, String delimiter ) {
+    DatatrailStorage(DatatrailDag dag, DataWriter inputFile, DataWriter outputFile, Path summaryFile, String delimiter ) {
         this.dag = dag
         this.inputFile = inputFile
         this.outputFile = outputFile
@@ -87,7 +87,7 @@ class DataflowStorage {
     static long calculateSize( Collection<Path> files ) {
         return files
                 .parallelStream()
-                .mapToLong(DataflowStorage::calculateSize)
+                .mapToLong(DatatrailStorage::calculateSize)
                 .sum()
     }
 

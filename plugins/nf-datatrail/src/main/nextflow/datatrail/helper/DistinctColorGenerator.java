@@ -1,4 +1,4 @@
-package nextflow.dataflow.helper;
+package nextflow.datatrail.helper;
 
 import groovy.transform.CompileStatic;
 

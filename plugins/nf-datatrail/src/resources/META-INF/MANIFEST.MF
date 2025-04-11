@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Plugin-Id: nf-dataflow
+Plugin-Id: nf-datatrail
 Plugin-Version: 0.0.1
-Plugin-Class: nextflow.dataflow.DataflowPlugin
+Plugin-Class: nextflow.datatrail.DatatrailPlugin
 Plugin-Provider: nextflow
 Plugin-Requires: >=24.04.0

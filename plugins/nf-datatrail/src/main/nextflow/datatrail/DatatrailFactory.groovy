@@ -1,4 +1,4 @@
-package nextflow.dataflow
+package nextflow.datatrail
 /*
  * Copyright 2021, Seqera Labs
  *
@@ -16,14 +16,18 @@ package nextflow.dataflow
  */
 
 import groovy.transform.CompileStatic
-import nextflow.plugin.BasePlugin
-import org.pf4j.PluginWrapper
+import nextflow.Session
+import nextflow.trace.TraceObserver
+import nextflow.trace.TraceObserverFactory
 
 @CompileStatic
-class DataflowPlugin extends BasePlugin {
+class DatatrailFactory implements TraceObserverFactory {
 
-    DataflowPlugin(PluginWrapper wrapper) {
-        super(wrapper)
+    @Override
+    Collection<TraceObserver> create(Session session) {
+        final result = new ArrayList()
+        result.add( new DatatrailObserver( session ) )
+        return result
     }
 
 }

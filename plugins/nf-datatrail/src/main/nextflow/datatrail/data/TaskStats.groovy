@@ -1,4 +1,4 @@
-package nextflow.dataflow.data
+package nextflow.datatrail.data
 
 import groovy.transform.CompileStatic
 import nextflow.processor.TaskRun

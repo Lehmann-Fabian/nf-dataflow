@@ -1,18 +1,18 @@
-package nextflow.dataflow.renderers
+package nextflow.datatrail.renderers
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
-import nextflow.dataflow.data.DataflowDag
-import nextflow.dataflow.helper.DistinctColorGenerator
-import nextflow.dataflow.helper.StringHelper
+import nextflow.datatrail.data.DatatrailDag
+import nextflow.datatrail.helper.DistinctColorGenerator
+import nextflow.datatrail.helper.StringHelper
 
 import java.nio.file.Path
 import java.util.regex.Pattern
 
 @Slf4j
 @CompileStatic
-class DataflowDotRenderer implements DagRenderer {
+class DatatrailDotRenderer implements DatatrailDagRenderer {
 
     private final String name
     private final boolean plotDetails
@@ -28,7 +28,7 @@ class DataflowDotRenderer implements DagRenderer {
      *
      * @param name The graph name used in the DOT format
      */
-    DataflowDotRenderer( String name,
+    DatatrailDotRenderer(String name,
                          String rankDir,
                          boolean plotDetails,
                          boolean plotExternalInputs,
@@ -50,8 +50,8 @@ class DataflowDotRenderer implements DagRenderer {
     private static String normalise(String str) { str.replaceAll(/[^0-9_A-Za-z]/,'') }
 
     @Override
-    void renderDocument(DataflowDag dag, Path file) {
-        log.info( "Rendering dataflow graph to file: ${file.toUriString()}" )
+    void renderDocument(DatatrailDag dag, Path file) {
+        log.info( "Rendering datatrail graph to file: ${file.toUriString()}" )
         file.text = renderNetwork(dag)
     }
 
@@ -71,22 +71,22 @@ class DataflowDotRenderer implements DagRenderer {
 
     }
 
-    private boolean filterProcess( DataflowDag.Process process ) {
+    private boolean filterProcess(DatatrailDag.Process process ) {
         String name = process.getProcessName()
         return filterTasks.any { it.matcher(name).matches() }
     }
 
-    private boolean keepEdge(DataflowDag.Edge edge ) {
-        return (edge.from.isOrigin() || !filterProcess( edge.from as DataflowDag.Process ))
-                && !filterProcess( edge.to as DataflowDag.Process )
+    private boolean keepEdge(DatatrailDag.Edge edge ) {
+        return (edge.from.isOrigin() || !filterProcess( edge.from as DatatrailDag.Process ))
+                && !filterProcess( edge.to as DatatrailDag.Process )
     }
 
     @PackageScope
-    String renderNetwork(DataflowDag dag) {
+    String renderNetwork(DatatrailDag dag) {
         def result = []
-        List<DataflowDag.Process> processesToPlot = dag.vertices
-                .findAll { it.isProcess() && !filterProcess(it as DataflowDag.Process) }
-                .collect { it as DataflowDag.Process }
+        List<DatatrailDag.Process> processesToPlot = dag.vertices
+                .findAll { it.isProcess() && !filterProcess(it as DatatrailDag.Process) }
+                .collect { it as DatatrailDag.Process }
         Map<String, String> colorMapForTasks = createColorMapForTasks( processesToPlot )
         result << "digraph \"${this.name}\" {"
         result << "  rankdir=$rankDir;"
@@ -112,7 +112,7 @@ class DataflowDotRenderer implements DagRenderer {
         result.addAll( processes )
 
         result << "  // Edges"
-        List<DataflowDag.Edge> edgesToRender = dag.edges
+        List<DatatrailDag.Edge> edgesToRender = dag.edges
         if ( !plotExternalInputs ) {
             edgesToRender = edgesToRender.findAll { !it.from.isOrigin() }
         }
@@ -129,7 +129,7 @@ class DataflowDotRenderer implements DagRenderer {
         return result.join('\n')
     }
 
-    private List<String> createExternalInputs( List<DataflowDag.Vertex> vertices ) {
+    private List<String> createExternalInputs( List<DatatrailDag.Vertex> vertices ) {
         List<String> result = new LinkedList<>()
         List<String> inputs = vertices
                 .findAll { it.isOrigin() }
@@ -144,7 +144,7 @@ class DataflowDotRenderer implements DagRenderer {
         return result
     }
 
-    private List<String> createRankSubgraph( int rank, List<DataflowDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
+    private List<String> createRankSubgraph(int rank, List<DatatrailDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
         List<String> subgraph = new LinkedList<>()
         subgraph << "  subgraph \"Rank: $rank\" {".toString()
         subgraph << "    rank = same;"
@@ -158,7 +158,7 @@ class DataflowDotRenderer implements DagRenderer {
         return showTagNames ? "cluster_${normalise( tag )}" : tag
     }
 
-    private List<String> createTagSubgraph( String tag, List<DataflowDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
+    private List<String> createTagSubgraph(String tag, List<DatatrailDag.Process> vertices, Map<String, String> colorMapForTasks, String commonName ) {
         List<String> subgraph = new LinkedList<>()
         if ( tag != null ) {
             subgraph << "  subgraph \"${createTagName(tag)}\" {".toString()
@@ -174,12 +174,12 @@ class DataflowDotRenderer implements DagRenderer {
         return subgraph
     }
 
-    private static Map<String, String> createColorMapForTasks( List<DataflowDag.Process> vertices ) {
+    private static Map<String, String> createColorMapForTasks( List<DatatrailDag.Process> vertices ) {
         Map<String, String> colorMap = [:]
 
         // Sorting guarantees that the same task name will always get the same color if the workflow does not change
         List<String> taskNames = vertices
-                .collect {(it as DataflowDag.Process).getProcessName() }
+                .collect {(it as DatatrailDag.Process).getProcessName() }
                 .unique()
                 .sort()
         List<String> colors = DistinctColorGenerator.generateDistinctColors(taskNames.size())
@@ -192,10 +192,10 @@ class DataflowDotRenderer implements DagRenderer {
         return colorMap
     }
 
-    private static String findCommonName( DataflowDag dag ) {
+    private static String findCommonName(DatatrailDag dag ) {
         List<String[]> taskNames = dag.vertices
                 .findAll { it.isProcess() }
-                .collect { (it as DataflowDag.Process).getProcessName() }
+                .collect { (it as DatatrailDag.Process).getProcessName() }
                 .findAll { it != null }
                 .unique()
                 .collect { it.split(":") }
@@ -233,7 +233,7 @@ class DataflowDotRenderer implements DagRenderer {
         return "<tr><td align=\"left\">$label:</td><td>${StringHelper.formatFiles(files)}</td><td>${StringHelper.formatSize(size)}</td></tr>"
     }
 
-    private String renderOrigin(DataflowDag.Vertex vertex) {
+    private String renderOrigin(DatatrailDag.Vertex vertex) {
         List attrs = []
         attrs << "shape=point"
         attrs << "label=\"\""
@@ -243,7 +243,7 @@ class DataflowDotRenderer implements DagRenderer {
         return "  ${vertex.getID()} [${attrs.join(',')}];"
     }
 
-    private String renderProcess(DataflowDag.Process process, Map<String, String> colorMapForTasks, String commonName = "") {
+    private String renderProcess(DatatrailDag.Process process, Map<String, String> colorMapForTasks, String commonName = "") {
         List attrs = []
         if ( plotDetails ) {
             attrs << """\
@@ -273,7 +273,7 @@ class DataflowDotRenderer implements DagRenderer {
         return "${process.getID()} [${attrs.join(',')}];"
     }
 
-    private String renderEdge(DataflowDag.Edge edge, Map<String, String> colorMapForTasks, long minimumEdgeWidth, long maximumEdgeWidth) {
+    private String renderEdge(DatatrailDag.Edge edge, Map<String, String> colorMapForTasks, long minimumEdgeWidth, long maximumEdgeWidth) {
         assert edge.from != null && edge.to != null
         def result = new StringBuilder()
         result << "  ${edge.from.ID} -> ${edge.to.ID}"

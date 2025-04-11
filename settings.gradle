@@ -23,4 +23,5 @@ plugins {
 
 rootProject.name = 'nf-dataflow'
 include('plugins')
+include('plugins:nf-datatrail')
 include('plugins:nf-dataflow')

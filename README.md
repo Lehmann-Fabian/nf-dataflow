@@ -1,4 +1,4 @@
-# Nextflow nf-dataflow Plugin – Understand Your Pipeline's Dataflow
+# Nextflow nf-datatrail Plugin – Understand Your Pipeline's Dataflow
 
 This plugin helps you analyze and visualize the data flow within your Nextflow pipeline.
 
@@ -12,7 +12,7 @@ No installation required. Simply add the plugin to your Nextflow config:
 
 ```nextflow
 plugins {
-   id 'nf-dataflow'
+   id 'nf-datatrail'
 }
 ```
 
@@ -22,7 +22,7 @@ plugins {
 Specify an output file in your Nextflow config:
 
 ```nextflow
-dataflow.plot.file = "physicalDag.dot"
+datatrail.plot.file = "physicalDag.dot"
 ```
 
 This generates a `physicalDag.dot` file in your working directory.  
@@ -34,10 +34,10 @@ Example visualization created with Graphviz, details activated:
 
 Example visualization created with Graphviz, details deactivated (recommended for large DAGs), no legend, and filtering MULTIQC:
 ![Dataflow](ExampleDagNoDetails.svg)
-Additional details are available on mouse hover if you view it on [full size](https://raw.githubusercontent.com/Lehmann-Fabian/nf-dataflow/refs/heads/master/ExampleDagNoDetails.svg).
+Additional details are available on mouse hover if you view it on [full size](https://raw.githubusercontent.com/Lehmann-Fabian/nf-datatrail/refs/heads/master/ExampleDagNoDetails.svg).
 
 The following options control the DAG’s rendering:
-Options are set in the **`dataflow.plot`** block in your Nextflow config.
+Options are set in the **`datatrail.plot`** block in your Nextflow config.
 
 
 | Option         | Default Value | Description                                                                                                          |
@@ -54,7 +54,7 @@ Options are set in the **`dataflow.plot`** block in your Nextflow config.
 Additionally, you can set a path to write the physical DAG as a `JSON` with the following options:
 
 ```nextflow
-dataflow.persist = "dag.json"
+datatrail.persist = "dag.json"
 ```
 This file can be used for further analyses.
 
@@ -62,7 +62,7 @@ This file can be used for further analyses.
 Create CSV files to track input and output files:
 
 ```nextflow
-dataflow {
+datatrail {
     input = "input.csv"
     output = "output.csv"
 }
@@ -85,7 +85,7 @@ Generated files:
 Generate a summary file with process dependencies and data volume:
 
 ```nextflow
-dataflow {
+datatrail {
     summary = "summary.csv"
 }
 ```

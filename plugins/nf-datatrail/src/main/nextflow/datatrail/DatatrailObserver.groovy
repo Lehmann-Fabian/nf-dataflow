@@ -1,4 +1,4 @@
-package nextflow.dataflow
+package nextflow.datatrail
 /*
  * Copyright 2021, Seqera Labs
  *
@@ -18,14 +18,14 @@ package nextflow.dataflow
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.Session
-import nextflow.dataflow.data.DataWriter
-import nextflow.dataflow.data.DataflowDag
-import nextflow.dataflow.data.DataflowStorage
-import nextflow.dataflow.helper.DAGStorage
-import nextflow.dataflow.helper.StringHelper
-import nextflow.dataflow.renderers.DagRenderer
-import nextflow.dataflow.renderers.DataflowDotRenderer
-import nextflow.dataflow.renderers.DataflowGraphvizRenderer
+import nextflow.datatrail.data.DataWriter
+import nextflow.datatrail.data.DatatrailDag
+import nextflow.datatrail.data.DatatrailStorage
+import nextflow.datatrail.helper.DAGStorage
+import nextflow.datatrail.helper.StringHelper
+import nextflow.datatrail.renderers.DatatrailDagRenderer
+import nextflow.datatrail.renderers.DatatrailDotRenderer
+import nextflow.datatrail.renderers.DatatrailGraphvizRenderer
 import nextflow.exception.AbortOperationException
 import nextflow.file.FileHelper
 import nextflow.processor.TaskHandler
@@ -37,9 +37,9 @@ import java.nio.file.Path
 
 @Slf4j
 @CompileStatic
-class DataflowObserver implements TraceObserver {
+class DatatrailObserver implements TraceObserver {
 
-    private final DataflowDag dag
+    private final DatatrailDag dag
     private final Path dagFile
     private final String dagName
     private final String dagFormat
@@ -57,14 +57,14 @@ class DataflowObserver implements TraceObserver {
     private final Path inputFile
     private final Path outputFile
     private final Path summaryFile
-    private final DataflowStorage storage
+    private final DatatrailStorage storage
 
-    DataflowObserver(Session session) {
-        dagFile = session.config.navigate('dataflow.plot.file') as Path
+    DatatrailObserver(Session session) {
+        dagFile = session.config.navigate('datatrail.plot.file') as Path
         if ( dagFile != null ) {
             dagFormat = dagFile.getExtension().toLowerCase() ?: 'html'
             dagName = dagFile.getBaseName()
-            boolean dagOverwrite = StringHelper.stringToBoolean(session.config.navigate('dataflow.overwrite'), false)
+            boolean dagOverwrite = StringHelper.stringToBoolean(session.config.navigate('datatrail.overwrite'), false)
             // check file existence
             final attrs = FileHelper.readAttributes(dagFile)
             if( attrs ) {
@@ -73,15 +73,15 @@ class DataflowObserver implements TraceObserver {
                 else if( !dagOverwrite )
                     throw new AbortOperationException("DAG file already exists: ${dagFile.toUriString()} -- enable `dag.overwrite` in your config file to overwrite existing DAG files")
             }
-            dag = new DataflowDag( dagFormat )
+            dag = new DatatrailDag( dagFormat )
 
-            rankdir = session.config.navigate('dataflow.plot.rankdir') as String ?: 'TB'
-            detailed = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.detailed'), false )
-            plotExternalInputs = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.external'), true )
-            plotLegend = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.legend'), true )
-            clusterByTag = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.cluster'), false )
-            showTagNames = StringHelper.stringToBoolean(session.config.navigate('dataflow.plot.tagNames'), true )
-            filterTasks = session.config.navigate('dataflow.plot.filter') as List<String> ?: new LinkedList<String>()
+            rankdir = session.config.navigate('datatrail.plot.rankdir') as String ?: 'TB'
+            detailed = StringHelper.stringToBoolean(session.config.navigate('datatrail.plot.detailed'), false )
+            plotExternalInputs = StringHelper.stringToBoolean(session.config.navigate('datatrail.plot.external'), true )
+            plotLegend = StringHelper.stringToBoolean(session.config.navigate('datatrail.plot.legend'), true )
+            clusterByTag = StringHelper.stringToBoolean(session.config.navigate('datatrail.plot.cluster'), false )
+            showTagNames = StringHelper.stringToBoolean(session.config.navigate('datatrail.plot.tagNames'), true )
+            filterTasks = session.config.navigate('datatrail.plot.filter') as List<String> ?: new LinkedList<String>()
 
         } else {
             dag = null
@@ -94,12 +94,12 @@ class DataflowObserver implements TraceObserver {
             showTagNames = false
             filterTasks = null
         }
-        persistFile = session.config.navigate('dataflow.persist') as Path
+        persistFile = session.config.navigate('datatrail.persist') as Path
         inputFile = initializeDataCSV( session, 'Input' )
         outputFile = initializeDataCSV( session, 'Output' )
         summaryFile = initializeDataCSV( session, 'Summary' )
-        String delimiter = session.config.navigate('dataflow.delimiter') as String ?: ';'
-        storage = new DataflowStorage(
+        String delimiter = session.config.navigate('datatrail.delimiter') as String ?: ';'
+        storage = new DatatrailStorage(
                 dag,
                 inputFile ? new DataWriter(inputFile, delimiter) : null,
                 outputFile ? new DataWriter(outputFile, delimiter) : null,
@@ -109,11 +109,11 @@ class DataflowObserver implements TraceObserver {
     }
 
     private static Path initializeDataCSV(Session session, String name ) {
-        Path file = session.config.navigate("dataflow.${name.toLowerCase()}") as Path
+        Path file = session.config.navigate("datatrail.${name.toLowerCase()}") as Path
         if ( file != null ) {
             if ( file.getExtension().toLowerCase() != 'csv' )
                 throw new AbortOperationException("$name file must be a CSV file: ${file.toUriString()}")
-            boolean inputOverwrite = StringHelper.stringToBoolean( session.config.navigate('dataflow.overwrite'), false )
+            boolean inputOverwrite = StringHelper.stringToBoolean( session.config.navigate('datatrail.overwrite'), false )
             // check file existence
             final attrs = FileHelper.readAttributes(file)
             if( attrs ) {
@@ -138,9 +138,9 @@ class DataflowObserver implements TraceObserver {
         storage.close()
     }
 
-    DagRenderer createRender() {
-        DataflowDotRenderer renderer = new DataflowDotRenderer(dagName, rankdir, detailed, plotExternalInputs, plotLegend, clusterByTag, showTagNames, filterTasks)
-        return dagFormat == 'dot' ? renderer : new DataflowGraphvizRenderer( dagFormat, renderer )
+    DatatrailDagRenderer createRender() {
+        DatatrailDotRenderer renderer = new DatatrailDotRenderer(dagName, rankdir, detailed, plotExternalInputs, plotLegend, clusterByTag, showTagNames, filterTasks)
+        return dagFormat == 'dot' ? renderer : new DatatrailGraphvizRenderer( dagFormat, renderer )
     }
 
     @Override

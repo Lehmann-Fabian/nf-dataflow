@@ -1,11 +1,11 @@
-package nextflow.dataflow.helper
+package nextflow.datatrail.helper
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import nextflow.dataflow.data.DataflowDag
+import nextflow.datatrail.data.DatatrailDag
 
 import java.nio.file.Path
 
@@ -13,13 +13,13 @@ import java.nio.file.Path
 @Slf4j
 class DAGStorage {
 
-    public final List<DataflowDag.Origin> origins
-    public final List<DataflowDag.Process> processes = new LinkedList<>()
-    public final List<DataflowDag.Edge> edges = new LinkedList<>()
+    public final List<DatatrailDag.Origin> origins
+    public final List<DatatrailDag.Process> processes = new LinkedList<>()
+    public final List<DatatrailDag.Edge> edges = new LinkedList<>()
 
-    DAGStorage(DataflowDag dag) {
-        origins = dag.vertices.findAll { it.isOrigin() }.collect{ it as DataflowDag.Origin }
-        processes = dag.vertices.findAll { it.isProcess() }.collect{ it as DataflowDag.Process }
+    DAGStorage(DatatrailDag dag) {
+        origins = dag.vertices.findAll { it.isOrigin() }.collect{ it as DatatrailDag.Origin }
+        processes = dag.vertices.findAll { it.isProcess() }.collect{ it as DatatrailDag.Process }
         edges = dag.edges
     }
 
@@ -30,7 +30,7 @@ class DAGStorage {
     }
 
     @CompileDynamic
-    static DataflowDag load( Path path ) {
+    static DatatrailDag load(Path path ) {
         JsonSlurper jsonSlurper = new JsonSlurper()
         Path data = path
         def text = jsonSlurper.parseText(data.text)
@@ -39,7 +39,7 @@ class DAGStorage {
         List<Map<String, Object>> processes = text.processes
         List<Map<String, Object>> edges = text.edges
 
-        List<DataflowDag.Vertex> vertices = new ArrayList<>()
+        List<DatatrailDag.Vertex> vertices = new ArrayList<>()
         for (Map<String, Object> origin : origins) {
             vertices.add(createOrigin(origin))
         }
@@ -47,30 +47,30 @@ class DAGStorage {
             vertices.add(createProcess(process))
         }
 
-        Map<String, DataflowDag.Vertex> verticesMap = new HashMap<>()
-        for (final DataflowDag.Vertex v in vertices) {
+        Map<String, DatatrailDag.Vertex> verticesMap = new HashMap<>()
+        for (final DatatrailDag.Vertex v in vertices) {
             verticesMap.put( v.getID(), v )
         }
 
-        List<DataflowDag.Edge> edgesList = new ArrayList<>()
+        List<DatatrailDag.Edge> edgesList = new ArrayList<>()
         for (Map<String, Object> edge : edges) {
             edgesList.add(createEdge( edge, verticesMap ))
         }
 
-        DataflowDag dag = new DataflowDag("dot")
+        DatatrailDag dag = new DatatrailDag("dot")
         dag.vertices.addAll( vertices )
         dag.edges.addAll( edgesList )
         return dag
     }
 
-    static private DataflowDag.Origin createOrigin(Map<String, Object> origin ) {
+    static private DatatrailDag.Origin createOrigin(Map<String, Object> origin ) {
         String id = origin.get("ID")
-        def origin1 = new DataflowDag.Origin()
+        def origin1 = new DatatrailDag.Origin()
         origin1.setID(id)
         return origin1
     }
 
-    static private DataflowDag.Process createProcess(Map<String, Object> process ) {
+    static private DatatrailDag.Process createProcess(Map<String, Object> process ) {
         final String id = process.get("ID")
         final int outputFiles = process.get( "outputFiles" ) as int
         final long outputSize = process.get( "outputSize" ) as long
@@ -78,14 +78,14 @@ class DAGStorage {
         final long inputSize = process.get( "inputSize" ) as long
         final String taskName = process.get( "taskName" ) as String
         final String processName = process.get( "processName" ) as String ?: taskName.split( " " )[0]
-        def process1 = new DataflowDag.Process( taskName, processName )
+        def process1 = new DatatrailDag.Process( taskName, processName )
         process1.setID(id)
         process1.setOutputData( outputFiles, outputSize )
         process1.addInputData( inputFiles, inputSize )
         return process1
     }
 
-    static private DataflowDag.Edge createEdge( Map<String, Object> edge, Map<String, DataflowDag.Vertex> verticesMap ) {
+    static private DatatrailDag.Edge createEdge(Map<String, Object> edge, Map<String, DatatrailDag.Vertex> verticesMap ) {
         final String id = edge.get("ID")
         final String from = (edge.get("from") as Map).get("ID") as String
         final String to = (edge.get("to") as Map).get("ID") as String
@@ -101,7 +101,7 @@ class DAGStorage {
             log.error "To vertex not found: ${edge}"
             throw new IllegalStateException("To vertex not found: ${edge}")
         }
-        def edge1 = new DataflowDag.Edge(fromVertex, toVertex as DataflowDag.Process )
+        def edge1 = new DatatrailDag.Edge(fromVertex, toVertex as DatatrailDag.Process )
         edge1.setInputData( inputFiles, inputSize )
         edge1.setID(id)
         return edge1

@@ -1,4 +1,4 @@
-package nextflow.dataflow.data
+package nextflow.datatrail.data
 
 
 import groovy.transform.CompileStatic
@@ -9,7 +9,7 @@ import java.nio.file.Path
 
 @Slf4j
 @CompileStatic
-class DataflowDag {
+class DatatrailDag {
 
     private final Map<TaskRun, Process> taskToVertex = new HashMap<>()
     private final boolean htmlNaming
@@ -17,7 +17,7 @@ class DataflowDag {
     private final List<Edge> edges = new ArrayList<>(50)
     private final List<Vertex> vertices = new ArrayList<>(50)
 
-    DataflowDag( String format ) {
+    DatatrailDag(String format ) {
         htmlNaming = format.toLowerCase() in ["html"]
     }
 
