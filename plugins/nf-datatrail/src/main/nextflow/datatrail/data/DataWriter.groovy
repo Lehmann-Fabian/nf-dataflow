@@ -12,6 +12,7 @@ class DataWriter {
 
     DataWriter( Path path, String delimiter ) {
         this.delimiter = delimiter
+        path.parent.mkdirs()
         writer = new PrintWriter(path.toFile())
         writer.println("name${delimiter}hash${delimiter}path${delimiter}type${delimiter}size")
     }

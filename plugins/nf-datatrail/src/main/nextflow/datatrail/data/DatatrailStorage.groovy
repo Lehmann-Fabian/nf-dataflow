@@ -97,6 +97,7 @@ class DatatrailStorage {
     }
 
     private void createSummary() {
+        summaryFile.parent.mkdirs()
         try (PrintWriter writer = new PrintWriter(summaryFile.toFile())){
             writer.println("task${delimiter}hash${delimiter}inputs${delimiter}inputSize${delimiter}outputs${delimiter}outputSize${delimiter}usedBy")
             taskStats.values().stream()

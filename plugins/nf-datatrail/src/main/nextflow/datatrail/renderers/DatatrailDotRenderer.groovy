@@ -52,6 +52,7 @@ class DatatrailDotRenderer implements DatatrailDagRenderer {
     @Override
     void renderDocument(DatatrailDag dag, Path file) {
         log.info( "Rendering datatrail graph to file: ${file.toUriString()}" )
+        file.parent.mkdirs()
         file.text = renderNetwork(dag)
     }
 

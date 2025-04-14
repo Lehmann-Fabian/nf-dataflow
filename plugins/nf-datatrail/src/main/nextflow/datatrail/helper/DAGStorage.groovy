@@ -24,6 +24,7 @@ class DAGStorage {
     }
 
     void persist( Path path ) {
+        path.parent.mkdirs()
         path.withWriter { writer ->
             writer << JsonOutput.prettyPrint( JsonOutput.toJson(this) )
         }

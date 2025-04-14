@@ -63,6 +63,7 @@ class DatatrailGraphvizRenderer implements DatatrailDagRenderer {
             log.warn "Failed to render DAG file: $target"
         }
         else {
+            target.parent.mkdirs()
             result.copyTo(target)
         }
 
